@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SwapX - DEX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+            --button-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            --bg-color: #ffffff;
+            --card-white: #ffffff;
+            --text-dark: #1c1c1e;
+            --text-gray: #8e8e93;
+            --border-color: #f0f0f0;
+            --nav-height: 80px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-color);
+            /* 模拟截图中的炫彩背景 */
+            background-image: radial-gradient(circle at 0% 0%, #ffdee9 0%, #fff 50%), radial-gradient(circle at 100% 0%, #c2e9fb 0%, #fff 50%);
+            background-attachment: fixed;
+            color: var(--text-dark);
+            padding-bottom: var(--nav-height);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部 Header */
+        .header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .logo i { color: #FF3B30; }
+        .wallet-pill {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 主交易卡片 */
+        .swap-container {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .swap-card {
+            background: var(--card-white);
+            border-radius: 24px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .input-box {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 5px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+        }
+
+        .input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .amount-input {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-dark);
+            width: 50%;
+            outline: none;
+        }
+        .amount-input::placeholder { color: #dcdcdc; }
+
+        .token-selector {
+            background: white;
+            padding: 6px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            min-width: 100px;
+            justify-content: space-between;
+        }
+        .token-selector img { width: 24px; height: 24px; border-radius: 50%; }
+        .token-selector span { font-weight: 600; font-size: 16px; }
+
+        .balance-row {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 8px;
+            gap: 5px;
+        }
+        .max-btn { color: #FF3B30; font-weight: 600; cursor: pointer; }
+
+        /* 交换按钮 (箭头) */
+        .swap-arrow-container {
+            height: 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .swap-arrow-btn {
+            background: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            color: var(--text-dark);
+            border: 3px solid white; /* Create gap effect */
+        }
+
+        /* 底部操作按钮 */
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        
+        .btn-active {
+            background: var(--button-gradient);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-disabled {
+            background: #e0e0e0; /* 默认灰色 */
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-warning {
+            background: #ffd54f; /* 余额不足黄 */
+            color: #5d4037;
+        }
+
+        /* 信息栏 */
+        .info-card {
+            margin-top: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: white; display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--border-color); z-index: 99;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 10px; text-decoration: none; }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--text-dark); }
+
+        /* ==================== 弹窗样式 ==================== */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 200; display: none;
+            align-items: flex-end;
+        }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            height: 70vh;
+            border-radius: 24px 24px 0 0;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .modal-title { font-size: 16px; font-weight: 700; }
+        .close-btn { font-size: 20px; cursor: pointer; color: #999; }
+
+        .modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧：热门代币 */
+        .token-column {
+            flex: 2;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .token-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .token-item:hover { background: #f5f5f5; }
+        .token-item img { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; }
+        .token-text h4 { font-size: 16px; margin-bottom: 2px; }
+        .token-text p { font-size: 12px; color: #999; }
+
+        /* 右侧：链选择 */
+        .chain-column {
+            flex: 1;
+            background: #f9f9f9;
+            border-left: 1px solid #eee;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        .chain-item {
+            padding: 15px 10px;
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            position: relative;
+        }
+        .chain-item.active { background: white; color: var(--text-dark); font-weight: 600; }
+        .chain-item.active::before {
+            content: ''; position: absolute; left: 0; top: 15%; height: 70%; width: 3px; background: #FF3B30;
+        }
+        .chain-item img { width: 20px; margin-right: 8px; border-radius: 50%; }
+
+        /* ==================== 购买和卖出页面 ==================== */
+        .buy-sell-container {
+            display: none;
+        }
+        .buy-sell-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .buy-form, .sell-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            background: #f9f9f9;
+            border-radius: 16px;
+            padding: 15px;
+        }
+
+        .form-group-label {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: white;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin: 0;
+        }
+
+        .token-select-btn, .payment-method-btn {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .token-select-btn:hover, .payment-method-btn:hover {
+            background: #f5f5f5;
+        }
+
+        /* 滑点设置 */
+        .slippage-menu {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 280px;
+            height: 100%;
+            background: white;
+            z-index: 500;
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .slippage-menu.active {
+            transform: translateX(0);
+        }
+
+        .slippage-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .slippage-option {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slippage-option input[type="radio"] {
+            accent-color: #FF3B30;
+        }
+
+        .slippage-option label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .slippage-custom {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .slippage-custom input {
+            width: 60px;
+            padding: 6px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .slippage-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 499;
+            display: none;
+        }
+
+        .slippage-overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+        @keyframes slideUp { from {transform:translateY(100%)} to {transform:translateY(0)} }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-layer-group"></i> SwapX
+        </div>
+        <div class="wallet-pill">
+            <i class="fas fa-wallet" style="color:#FF3B30"></i>
+            0xB4...3B3
+            <i class="fas fa-chevron-down" style="font-size:10px; margin-left:5px;"></i>
+        </div>
+        <i class="fas fa-bars" style="font-size:20px;"></i>
+    </div>
+
+    <div class="swap-container">
+        <div class="swap-card" id="swapMode">
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
+                <div style="color:#999; cursor:pointer;" onclick="switchMode('buy')">购买</div>
+                <div style="color:#999; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
+                <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
+            </div>
+
+            <div class="input-box">
+                <div class="label-row">
+                    <span>从 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="fromChainText">Ethereum</span></span>
+                </div>
+                <div class="input-row">
+                    <input type="number" class="amount-input" id="payInput" placeholder="0.00" oninput="calculateOutput()">
+                    <div class="token-selector" onclick="openTokenModal('pay')">
+                        <div style="display:flex; align-items:center;">
+                            <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" id="payTokenIcon">
+                            <span id="payTokenSymbol" style="margin-left:5px;">ETH</span>
+                        </div>
+                        <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                    </div>
+                </div>
+                <div class="balance-row">
+                    <span>余额: <span id="payBalance">1.50</span></span>
+                    <span class="max-btn" onclick="setMax()">最大</span>
+                </div>
+            </div>
+
+            <div class="swap-arrow-container">
+                <div class="swap-arrow-btn" onclick="switchDirection()">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+            </div>
+
+            <div class="input-box" style="margin-top:-18px; padding-top:25px;">
+                <div class="label-row">
+                    <span>到 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="toChainText">Ethereum</span></span>
+                </div>
+                <div class="input-row">
+                    <input type="text" class="amount-input" id="receiveInput" placeholder="0.00" readonly>
+                    <div class="token-selector" onclick="openTokenModal('receive')">
+                        <div style="display:flex; align-items:center;">
+                            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" id="receiveTokenIcon">
+                            <span id="receiveTokenSymbol" style="margin-left:5px;">USDT</span>
+                        </div>
+                        <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                    </div>
+                </div>
+                <div class="balance-row">
+                    <span>余额: <span id="receiveBalance">0.00</span></span>
+                </div>
+            </div>
+
+            <button class="action-btn btn-active" id="mainBtn" onclick="executeSwap()">输入金额</button>
+        </div>
+
+        <!-- 购买页面 -->
+        <div class="buy-sell-container" id="buyMode">
+            <div class="swap-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
+                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('buy')">购买</div>
+                    <div style="color:#999; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
+                    <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
+                </div>
+
+                <div class="buy-form">
+                    <div class="form-group">
+                        <label class="form-group-label">选择代币</label>
+                        <div class="token-select-btn" onclick="openBuyTokenModal()">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <img id="buyTokenIcon" src="https://cryptologos.cc/logos/tether-usdt-logo.png" style="width:24px; height:24px; border-radius:50%;">
+                                <span id="buyTokenName">USDT</span>
+                            </div>
+                            <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">购买金额</label>
+                        <input type="number" class="form-input" id="buyAmount" placeholder="输入购买数量" oninput="calculateBuyUSD()">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">USD金额</label>
+                        <input type="text" class="form-input" id="buyUSD" placeholder="0.00" readonly style="background:#f5f5f5; color:#999;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">接收地址</label>
+                        <input type="text" class="form-input" id="buyAddress" placeholder="输入钱包地址">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">选择支付方式</label>
+                        <button class="payment-method-btn" onclick="openPaymentMethodModal()">
+                            <span id="selectedPaymentMethod">选择支付方式</span>
+                            <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                        </button>
+                    </div>
+
+                    <button class="action-btn btn-active" onclick="executeBuy()">购买</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卖出页面 -->
+        <div class="buy-sell-container" id="sellMode">
+            <div class="swap-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
+                    <div style="color:#999; cursor:pointer;" onclick="switchMode('buy')">购买</div>
+                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
+                    <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
+                </div>
+
+                <div class="sell-form">
+                    <div class="form-group">
+                        <label class="form-group-label">选择代币</label>
+                        <div class="token-select-btn" onclick="openSellTokenModal()">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <img id="sellTokenIcon" src="https://cryptologos.cc/logos/tether-usdt-logo.png" style="width:24px; height:24px; border-radius:50%;">
+                                <span id="sellTokenName">USDT</span>
+                            </div>
+                            <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">卖出金额</label>
+                        <input type="number" class="form-input" id="sellAmount" placeholder="输入卖出数量" oninput="calculateSellAmount()">
+                        <div class="balance-row" style="margin-top:8px;">
+                            <span>余额: <span id="sellBalance">100.00</span></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">接收金额</label>
+                        <input type="text" class="form-input" id="sellReceiveAmount" placeholder="0.00" readonly style="background:#f5f5f5; color:#999;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-group-label">通道 / 出金方式</label>
+                        <button class="payment-method-btn" onclick="openChannelModal()">
+                            <span id="selectedChannel">选择通道</span>
+                            <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                        </button>
+                    </div>
+
+                    <button class="action-btn btn-active" onclick="executeSell()">卖出</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:15px; margin-top:20px;">
+            <div style="flex:1; background:white; padding:15px; border-radius:16px; display:flex; align-items:center; gap:10px;">
+                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" width="30">
+                <div>
+                    <div style="font-weight:700;">BTC</div>
+                    <div style="font-size:12px; color:#0f0;">+2.51%</div>
+                </div>
+            </div>
+            <div style="flex:1; background:white; padding:15px; border-radius:16px; display:flex; align-items:center; gap:10px;">
+                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" width="30">
+                <div>
+                    <div style="font-weight:700;">ETH</div>
+                    <div style="font-size:12px; color:#0f0;">+1.73%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 更多热门代币轮播 -->
+        <div style="margin-top:15px;">
+            <div style="font-size:14px; font-weight:700; margin-bottom:10px; color:#666;">热门代币</div>
+            <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">
+                <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
+                    <img src="https://cryptologos.cc/logos/solana-sol-logo.png" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">SOL</div><div style="font-size:11px; color:#0f0;">+3.2%</div></div>
+                </div>
+                <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
+                    <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">XRP</div><div style="font-size:11px; color:#f00;">-1.5%</div></div>
+                </div>
+                <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
+                    <img src="https://cryptologos.cc/logos/tesla-tsla-logo.png" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">TSLA</div><div style="font-size:11px; color:#0f0;">+2.1%</div></div>
+                </div>
+                <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
+                    <img src="https://cryptologos.cc/logos/luna-luna-logo.png" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">LUNA</div><div style="font-size:11px; color:#f00;">-0.8%</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="Home.html" class="nav-item">
+            <i class="fas fa-wallet"></i>
+            <span>首页</span>
+        </a>
+        <a href="Discover.html" class="nav-item">
+            <i class="far fa-compass"></i>
+            <span>发现</span>
+        </a>
+        <a href="RWA.html" class="nav-item">
+            <i class="fas fa-chart-pie"></i>
+            <span>RWA</span>
+        </a>
+        <a href="Futures.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>合约</span>
+        </a>
+        <a href="Swap.html" class="nav-item active">
+            <i class="fas fa-exchange-alt"></i>
+            <span>交易</span>
+        </a>
+        <a href="Invite.html" class="nav-item">
+            <i class="far fa-user"></i>
+            <span>邀请</span>
+        </a>
+    </div>
+
+    <div class="modal-overlay" id="tokenModal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择链和代币</span>
+                <span class="close-btn" onclick="document.getElementById('tokenModal').classList.remove('active')">&times;</span>
+            </div>
+            <div style="padding: 10px 20px;">
+                <input type="text" placeholder="按代币或地址搜索" style="width:100%; padding:10px; background:#f5f5f5; border:none; border-radius:8px; outline:none;">
+            </div>
+            <div class="modal-body">
+                <div class="token-column" id="tokenListContainer">
+                    </div>
+
+                <div class="chain-column" id="chainListContainer">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 购买选择代币弹窗 -->
+    <div class="modal-overlay" id="buyTokenModal" onclick="closeBuyTokenModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择要购买的代币</span>
+                <span class="close-btn" onclick="document.getElementById('buyTokenModal').classList.remove('active')">&times;</span>
+            </div>
+            <div style="padding: 10px 20px;">
+                <input type="text" placeholder="搜索代币" style="width:100%; padding:10px; background:#f5f5f5; border:none; border-radius:8px; outline:none;">
+            </div>
+            <div class="modal-body" style="flex-direction:column;">
+                <div class="token-column" id="buyTokenListContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 卖出选择代币弹窗 -->
+    <div class="modal-overlay" id="sellTokenModal" onclick="closeSellTokenModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择要卖出的代币</span>
+                <span class="close-btn" onclick="document.getElementById('sellTokenModal').classList.remove('active')">&times;</span>
+            </div>
+            <div style="padding: 10px 20px;">
+                <input type="text" placeholder="搜索代币" style="width:100%; padding:10px; background:#f5f5f5; border:none; border-radius:8px; outline:none;">
+            </div>
+            <div class="modal-body" style="flex-direction:column;">
+                <div class="token-column" id="sellTokenListContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 支付方式弹窗 -->
+    <div class="modal-overlay" id="paymentMethodModal" onclick="closePaymentMethodModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择支付方式</span>
+                <span class="close-btn" onclick="document.getElementById('paymentMethodModal').classList.remove('active')">&times;</span>
+            </div>
+            <div class="modal-body" style="flex-direction:column; padding:20px;">
+                <div id="paymentMethodList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通道 / 出金方式弹窗 -->
+    <div class="modal-overlay" id="channelModal" onclick="closeChannelModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择出金通道</span>
+                <span class="close-btn" onclick="document.getElementById('channelModal').classList.remove('active')">&times;</span>
+            </div>
+            <div class="modal-body" style="flex-direction:column; padding:20px;">
+                <div id="channelList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 滑点设置菜单 -->
+    <div class="slippage-overlay" id="slippageOverlay" onclick="toggleSlippageMenu()"></div>
+    <div class="slippage-menu" id="slippageMenu">
+        <div class="slippage-menu-header">
+            <span>滑点设置</span>
+            <i class="fas fa-times" onclick="toggleSlippageMenu()" style="cursor:pointer;"></i>
+        </div>
+        <div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-auto" name="slippage" value="auto" checked>
+                <label for="slippage-auto">自动 (推荐)</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-01" name="slippage" value="0.1">
+                <label for="slippage-01">0.1%</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-05" name="slippage" value="0.5">
+                <label for="slippage-05">0.5%</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-1" name="slippage" value="1">
+                <label for="slippage-1">1%</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-5" name="slippage" value="5">
+                <label for="slippage-5">5%</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-10" name="slippage" value="10">
+                <label for="slippage-10">10%</label>
+            </div>
+            <div class="slippage-option">
+                <input type="radio" id="slippage-custom" name="slippage" value="custom">
+                <label for="slippage-custom">自定义</label>
+                <div class="slippage-custom">
+                    <input type="number" id="customSlippage" placeholder="%" min="0" max="100" step="0.1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 模拟数据 ---
+        const chains = [
+            { id: 'eth', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            { id: 'bsc', name: 'BSC', icon: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
+            { id: 'arb', name: 'Arbitrum', icon: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png' },
+            { id: 'poly', name: 'Polygon', icon: 'https://cryptologos.cc/logos/polygon-matic-logo.png' },
+            { id: 'opt', name: 'Optimism', icon: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png' },
+            { id: 'avax', name: 'Avalanche', icon: 'https://cryptologos.cc/logos/avalanche-avax-logo.png' }
+        ];
+
+        // 所有代币数据 (包括购买/卖出用的代币)
+        const tokens = [
+            { sym: 'ETH', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', chain: 'eth', price: 3200 },
+            { sym: 'USDT', name: 'Tether USD', icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png', chain: 'all', price: 1 },
+            { sym: 'USDC', name: 'USD Coin', icon: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png', chain: 'all', price: 1 },
+            { sym: 'USDH', name: 'Huobi Dollar', icon: 'https://cryptologos.cc/logos/huobi-token-ht-logo.png', chain: 'all', price: 1 },
+            { sym: 'UNI', name: 'Uniswap', icon: 'https://cryptologos.cc/logos/uniswap-uni-logo.png', chain: 'eth', price: 6 },
+            { sym: 'BNB', name: 'BNB', icon: 'https://cryptologos.cc/logos/bnb-bnb-logo.png', chain: 'bsc', price: 600 },
+            { sym: 'CAKE', name: 'PancakeSwap', icon: 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png', chain: 'bsc', price: 2.5 },
+            { sym: 'ARB', name: 'Arbitrum', icon: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png', chain: 'arb', price: 1.2 },
+            { sym: 'BTC', name: 'Bitcoin', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', chain: 'all', price: 92440 },
+            { sym: 'SOL', name: 'Solana', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png', chain: 'all', price: 220 },
+            { sym: 'XRP', name: 'XRP', icon: 'https://cryptologos.cc/logos/xrp-xrp-logo.png', chain: 'all', price: 3.5 },
+            { sym: 'TSLA', name: 'Tesla Token', icon: 'https://cryptologos.cc/logos/tesla-tsla-logo.png', chain: 'all', price: 410 },
+            { sym: 'LUNA', name: 'Luna', icon: 'https://cryptologos.cc/logos/luna-luna-logo.png', chain: 'all', price: 125 }
+        ];
+
+        // 支付方式
+        const paymentMethods = [
+            { id: 'usd', name: '美元 (USD)', flag: '🇺🇸' },
+            { id: 'riel', name: '瑞尔 (KHR)', flag: '🇰🇭' },
+            { id: 'baht', name: '泰铢 (THB)', flag: '🇹🇭' },
+            { id: 'ringgit', name: '马来西亚币 (MYR)', flag: '🇲🇾' }
+        ];
+
+        // 出金通道
+        const channels = [
+            { id: 'bank_usd', name: '银行转账 - USD', currency: 'USD' },
+            { id: 'bank_riel', name: '银行转账 - KHR', currency: 'KHR' },
+            { id: 'bank_baht', name: '银行转账 - THB', currency: 'THB' },
+            { id: 'bank_ringgit', name: '银行转账 - MYR', currency: 'MYR' }
+        ];
+
+        // --- 状态 ---
+        let state = {
+            currentMode: 'swap', // 'swap', 'buy', 'sell'
+            currentTokenMode: 'pay', // 用于兑换页面
+            payToken: tokens[0],
+            receiveToken: tokens[1],
+            payBalance: 1.5,
+            receiveBalance: 0.0,
+            selectedChainFilter: 'eth',
+            buyToken: tokens[1], // USDT
+            sellToken: tokens[1], // USDT
+            selectedPaymentMethod: null,
+            selectedChannel: null,
+            selectedSlippage: 'auto'
+        };
+
+        // --- 初始化 ---
+        window.onload = function() {
+            renderChains();
+            renderTokens('eth');
+            renderBuyTokenList();
+            renderSellTokenList();
+            renderPaymentMethodList();
+            renderChannelList();
+            updateUI();
+        };
+
+        // --- 页面模式切换 ---
+        function switchMode(mode) {
+            state.currentMode = mode;
+            const swapMode = document.getElementById('swapMode');
+            const buyMode = document.getElementById('buyMode');
+            const sellMode = document.getElementById('sellMode');
+            
+            swapMode.style.display = mode === 'swap' ? 'block' : 'none';
+            buyMode.classList.toggle('active', mode === 'buy');
+            sellMode.classList.toggle('active', mode === 'sell');
+        }
+
+        // --- 渲染逻辑 ---
+        function renderChains() {
+            const container = document.getElementById('chainListContainer');
+            container.innerHTML = chains.map(c => `
+                <div class="chain-item ${c.id === state.selectedChainFilter ? 'active' : ''}" onclick="selectChainFilter('${c.id}')">
+                    <img src="${c.icon}"> ${c.name}
+                </div>
+            `).join('');
+        }
+
+        function renderTokens(chainId) {
+            const container = document.getElementById('tokenListContainer');
+            const filtered = tokens.filter(t => t.chain === 'all' || t.chain === chainId);
+            container.innerHTML = `<div style="font-size:12px; color:#999; margin-bottom:10px;">热门代币</div>` + 
+            filtered.map(t => `
+                <div class="token-item" onclick="selectToken('${t.sym}')">
+                    <img src="${t.icon}">
+                    <div class="token-text">
+                        <h4>${t.sym}</h4>
+                        <p>${t.name}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderBuyTokenList() {
+            const container = document.getElementById('buyTokenListContainer');
+            const buyTokens = [tokens[1], tokens[2], tokens[3]]; // USDT, USDC, USDH
+            container.innerHTML = buyTokens.map(t => `
+                <div class="token-item" onclick="selectBuyToken('${t.sym}')">
+                    <img src="${t.icon}">
+                    <div class="token-text">
+                        <h4>${t.sym}</h4>
+                        <p>${t.name}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSellTokenList() {
+            const container = document.getElementById('sellTokenListContainer');
+            const sellTokens = [tokens[1], tokens[2], tokens[3]]; // USDT, USDC, USDH
+            container.innerHTML = sellTokens.map(t => `
+                <div class="token-item" onclick="selectSellToken('${t.sym}')">
+                    <img src="${t.icon}">
+                    <div class="token-text">
+                        <h4>${t.sym}</h4>
+                        <p>${t.name}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPaymentMethodList() {
+            const container = document.getElementById('paymentMethodList');
+            container.innerHTML = paymentMethods.map(m => `
+                <div style="padding:15px; border:1px solid #e0e0e0; border-radius:12px; margin-bottom:10px; cursor:pointer;" onclick="selectPaymentMethod('${m.id}', '${m.name}')">
+                    <div style="font-size:16px; font-weight:700;">${m.flag} ${m.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderChannelList() {
+            const container = document.getElementById('channelList');
+            container.innerHTML = channels.map(c => `
+                <div style="padding:15px; border:1px solid #e0e0e0; border-radius:12px; margin-bottom:10px; cursor:pointer;" onclick="selectChannel('${c.id}', '${c.name}')">
+                    <div style="font-size:16px; font-weight:700;">${c.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateUI() {
+            // 更新兑换页面
+            document.getElementById('payTokenSymbol').innerText = state.payToken.sym;
+            document.getElementById('payTokenIcon').src = state.payToken.icon;
+            document.getElementById('receiveTokenSymbol').innerText = state.receiveToken.sym;
+            document.getElementById('receiveTokenIcon').src = state.receiveToken.icon;
+
+            document.getElementById('payBalance').innerText = state.payBalance.toFixed(4);
+            document.getElementById('receiveBalance').innerText = state.receiveBalance.toFixed(4);
+
+            // 更新购买页面
+            document.getElementById('buyTokenIcon').src = state.buyToken.icon;
+            document.getElementById('buyTokenName').innerText = state.buyToken.sym;
+
+            // 更新卖出页面
+            document.getElementById('sellTokenIcon').src = state.sellToken.icon;
+            document.getElementById('sellTokenName').innerText = state.sellToken.sym;
+            document.getElementById('sellBalance').innerText = (Math.random() * 200).toFixed(2);
+
+            calculateOutput();
+        }
+
+        // --- 交互逻辑 ---
+
+        // 兑换页面 - 打开代币选择
+        function openTokenModal(mode) {
+            state.currentTokenMode = mode;
+            document.getElementById('tokenModal').classList.add('active');
+        }
+
+        function closeModal(e) {
+            if (e.target.id === 'tokenModal') {
+                document.getElementById('tokenModal').classList.remove('active');
+            }
+        }
+
+        // 购买页面 - 打开代币选择
+        function openBuyTokenModal() {
+            document.getElementById('buyTokenModal').classList.add('active');
+        }
+
+        function closeBuyTokenModal(e) {
+            if (e.target.id === 'buyTokenModal') {
+                document.getElementById('buyTokenModal').classList.remove('active');
+            }
+        }
+
+        function selectBuyToken(sym) {
+            state.buyToken = tokens.find(t => t.sym === sym);
+            document.getElementById('buyTokenModal').classList.remove('active');
+            updateUI();
+        }
+
+        // 卖出页面 - 打开代币选择
+        function openSellTokenModal() {
+            document.getElementById('sellTokenModal').classList.add('active');
+        }
+
+        function closeSellTokenModal(e) {
+            if (e.target.id === 'sellTokenModal') {
+                document.getElementById('sellTokenModal').classList.remove('active');
+            }
+        }
+
+        function selectSellToken(sym) {
+            state.sellToken = tokens.find(t => t.sym === sym);
+            document.getElementById('sellTokenModal').classList.remove('active');
+            updateUI();
+        }
+
+        // 支付方式弹窗
+        function openPaymentMethodModal() {
+            document.getElementById('paymentMethodModal').classList.add('active');
+        }
+
+        function closePaymentMethodModal(e) {
+            if (e.target.id === 'paymentMethodModal') {
+                document.getElementById('paymentMethodModal').classList.remove('active');
+            }
+        }
+
+        function selectPaymentMethod(id, name) {
+            state.selectedPaymentMethod = name;
+            document.getElementById('selectedPaymentMethod').innerText = name;
+            document.getElementById('paymentMethodModal').classList.remove('active');
+        }
+
+        // 通道弹窗
+        function openChannelModal() {
+            document.getElementById('channelModal').classList.add('active');
+        }
+
+        function closeChannelModal(e) {
+            if (e.target.id === 'channelModal') {
+                document.getElementById('channelModal').classList.remove('active');
+            }
+        }
+
+        function selectChannel(id, name) {
+            state.selectedChannel = name;
+            document.getElementById('selectedChannel').innerText = name;
+            document.getElementById('channelModal').classList.remove('active');
+        }
+
+        // 滑点菜单
+        function toggleSlippageMenu() {
+            const menu = document.getElementById('slippageMenu');
+            const overlay = document.getElementById('slippageOverlay');
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // 兑换页面 - 链选择
+        function selectChainFilter(chainId) {
+            state.selectedChainFilter = chainId;
+            renderChains();
+            renderTokens(chainId);
+        }
+
+        // 兑换页面 - 代币选择
+        function selectToken(sym) {
+            const token = tokens.find(t => t.sym === sym);
+            if (state.currentTokenMode === 'pay') {
+                state.payToken = token;
+                state.payBalance = Math.random() * 5;
+            } else {
+                state.receiveToken = token;
+                state.receiveBalance = Math.random() * 100;
+            }
+            document.getElementById('tokenModal').classList.remove('active');
+            updateUI();
+        }
+
+        // 点击中间箭头交换
+        function switchDirection() {
+            const tempToken = state.payToken;
+            state.payToken = state.receiveToken;
+            state.receiveToken = tempToken;
+            
+            const tempBal = state.payBalance;
+            state.payBalance = state.receiveBalance;
+            state.receiveBalance = tempBal;
+
+            updateUI();
+        }
+
+        // 点击最大
+        function setMax() {
+            document.getElementById('payInput').value = state.payBalance;
+            calculateOutput();
+        }
+
+        // 计算兑换输出
+        function calculateOutput() {
+            const inputVal = parseFloat(document.getElementById('payInput').value);
+            const btn = document.getElementById('mainBtn');
+
+            if (!inputVal || inputVal <= 0) {
+                document.getElementById('receiveInput').value = "";
+                btn.innerText = "输入金额";
+                btn.className = "action-btn btn-active";
+                return;
+            }
+
+            if (inputVal > state.payBalance) {
+                btn.innerText = `余额不足 ${state.payToken.sym}`;
+                btn.className = "action-btn btn-warning";
+            } else {
+                btn.innerText = "兑换";
+                btn.className = "action-btn btn-active";
+            }
+
+            const output = (inputVal * state.payToken.price) / state.receiveToken.price;
+            document.getElementById('receiveInput').value = output.toFixed(6);
+        }
+
+        // 计算购买的USD金额
+        function calculateBuyUSD() {
+            const amount = parseFloat(document.getElementById('buyAmount').value);
+            if (!amount || amount <= 0) {
+                document.getElementById('buyUSD').value = "";
+                return;
+            }
+            // 模拟: 数量 * 单价 / 1 (因为代币都假设USD价格)
+            const usdAmount = amount * state.buyToken.price;
+            document.getElementById('buyUSD').value = usdAmount.toFixed(2);
+        }
+
+        // 计算卖出获得金额
+        function calculateSellAmount() {
+            const amount = parseFloat(document.getElementById('sellAmount').value);
+            if (!amount || amount <= 0) {
+                document.getElementById('sellReceiveAmount').value = "";
+                return;
+            }
+            // 模拟: 数量 * 单价
+            const receiveAmount = amount * state.sellToken.price;
+            document.getElementById('sellReceiveAmount').value = receiveAmount.toFixed(2);
+        }
+
+        // 执行兑换
+        function executeSwap() {
+            const btn = document.getElementById('mainBtn');
+            if (btn.innerText === "兑换") {
+                btn.innerText = "兑换中...";
+                setTimeout(() => {
+                    alert("兑换成功！");
+                    document.getElementById('payInput').value = "";
+                    document.getElementById('receiveInput').value = "";
+                    btn.innerText = "输入金额";
+                    updateUI();
+                }, 1500);
+            }
+        }
+
+        // 执行购买
+        function executeBuy() {
+            const address = document.getElementById('buyAddress').value;
+            const amount = document.getElementById('buyAmount').value;
+            const paymentMethod = state.selectedPaymentMethod;
+
+            if (!address) {
+                alert("请输入接收地址");
+                return;
+            }
+            if (!amount) {
+                alert("请输入购买金额");
+                return;
+            }
+            if (!paymentMethod) {
+                alert("请选择支付方式");
+                return;
+            }
+
+            alert(`购买成功！\n代币: ${state.buyToken.sym}\n数量: ${amount}\n支付方式: ${paymentMethod}`);
+            document.getElementById('buyAmount').value = "";
+            document.getElementById('buyUSD').value = "";
+            document.getElementById('buyAddress').value = "";
+            document.getElementById('selectedPaymentMethod').innerText = "选择支付方式";
+            state.selectedPaymentMethod = null;
+        }
+
+        // 执行卖出
+        function executeSell() {
+            const amount = document.getElementById('sellAmount').value;
+            const channel = state.selectedChannel;
+
+            if (!amount) {
+                alert("请输入卖出金额");
+                return;
+            }
+            if (!channel) {
+                alert("请选择出金通道");
+                return;
+            }
+
+            alert(`卖出成功！\n代币: ${state.sellToken.sym}\n数量: ${amount}\n出金通道: ${channel}`);
+            document.getElementById('sellAmount').value = "";
+            document.getElementById('sellReceiveAmount').value = "";
+            document.getElementById('selectedChannel').innerText = "选择通道";
+            state.selectedChannel = null;
+        }
+        
+        function connectWallet() {
+            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
+        }
+
+    </script>
+</body>
+</html>

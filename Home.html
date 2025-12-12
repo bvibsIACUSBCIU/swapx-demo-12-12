@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Wallet Home</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --card-white: #ee1d1d;
+            --card-gray: #f5f5f7;
+            --card-black: #000000;
+            --text-dark: #1c1c1e;
+            --text-gray: #8e8e93;
+            --primary-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            --gradient-btn: linear-gradient(135deg, #ffd33d 0%, #ff9500 100%);
+            --primary-red: #ff3b30;
+            --border-color: #f0f0f0;
+            --border-radius: 20px;
+            --page-padding: 20px;
+            --nav-height: 80px;
+        }
+
+        /* 连接钱包渐变按钮 */
+        .connect-wallet-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .connect-wallet-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .connect-wallet-btn i {
+            font-size: 13px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 视图管理器 */
+        .view-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: none; /* 默认隐藏，JS控制显示 */
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .view-container.active {
+            display: flex;
+        }
+
+        /* 顶部导航 (通用) */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: transparent;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* 首页特定样式 */
+        .wallet-select, .chain-select {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .wallet-select i, .chain-select i {
+            margin-left: 5px;
+            color: var(--text-gray);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #eee;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-dot.connected { background-color: #2ecc71; }
+
+        /* 黑色资产卡片 */
+        .asset-card {
+            background-color: var(--card-black);
+            color: white;
+            margin: 10px 15px;
+            padding: 25px 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .address-row {
+            display: flex;
+            align-items: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        
+        .address-row i { margin-left: 8px; cursor: pointer; }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: #222;
+            border-radius: 16px;
+            flex: 1;
+            padding: 12px 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .action-btn.red-bg {
+            background: var(--primary-red);
+        }
+        
+        .action-btn i { margin-right: 5px; }
+
+        /* 备份提示栏 */
+        .backup-banner {
+            background: white;
+            margin: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .backup-text h4 { font-size: 14px; margin-bottom: 5px; }
+        .backup-btn {
+            border: 1px solid #333;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        /* 标签栏 */
+        .tabs {
+            display: flex;
+            padding: 10px 20px;
+            gap: 20px;
+            border-bottom: 1px solid transparent;
+        }
+        .tab-item {
+            font-weight: 600;
+            color: #999;
+            font-size: 16px;
+            padding-bottom: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        .tab-item.active {
+            color: #000;
+        }
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #000;
+            border-radius: 2px;
+        }
+
+        /* 列表区域 */
+        .list-container {
+            padding: 0 15px 80px 15px; /* 底部留空给导航栏 */
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 代币列表项 */
+        .token-item {
+            background: white;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .token-item:active { transform: scale(0.98); }
+
+        .token-left { display: flex; align-items: center; }
+        .token-logo {
+            width: 40px; height: 40px; border-radius: 50%;
+            margin-right: 12px; object-fit: cover;
+            background: #eee;
+        }
+        .token-info h3 { font-size: 16px; }
+        .token-info p { font-size: 12px; color: #666; margin-top: 2px; }
+        .price-change { font-size: 12px; }
+        .price-change.up { color: #2ecc71; }
+        .price-change.down { color: var(--primary-red); }
+        .token-right { text-align: right; }
+        .token-right h3 { font-size: 16px; }
+        .token-right p { font-size: 12px; color: #999; }
+
+        /* 空状态 */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 0;
+            color: #999;
+        }
+        .empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            z-index: 99;
+        }
+        .nav-item {
+            text-decoration: none;
+            color: var(--text-gray);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            flex: 1;
+            cursor: pointer;
+        }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--text-dark); }
+        .nav-item.active i { color: var(--primary-red); }
+
+        /* --- 详情页样式 --- */
+        .detail-header-coin {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .detail-header-coin img { width: 24px; height: 24px; margin-right: 8px; border-radius: 50%; }
+        
+        .detail-balance {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .detail-balance h1 { font-size: 48px; font-weight: bold; margin-bottom: 5px; }
+        .detail-balance p { color: #999; font-size: 14px; }
+
+        .detail-actions {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .detail-btn {
+            background: #000;
+            color: white;
+            width: 140px;
+            padding: 12px 0;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .detail-btn i { margin-right: 8px; }
+
+        .history-section {
+            text-align: center;
+            color: #999;
+            padding-top: 50px;
+        }
+        .history-box img { width: 80px; margin-bottom: 15px; opacity: 0.5; }
+        .history-box a { color: #333; text-decoration: underline; font-size: 12px; margin-top: 10px; display: block; }
+
+        /* --- 收款页样式 --- */
+        .receive-card {
+            background: var(--card-black);
+            margin: 20px;
+            border-radius: 25px;
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .receive-chain-select {
+            display: inline-flex;
+            align-items: center;
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .qr-container {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .qr-logo-overlay {
+            position: absolute;
+            width: 40px; height: 40px;
+            background: var(--primary-red);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 20px;
+            border: 3px solid white;
+        }
+        .address-text {
+            font-family: monospace;
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 5px;
+            word-break: break-all;
+            padding: 0 20px;
+        }
+        .copy-hint { color: #888; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        
+        .receive-actions {
+            display: flex;
+            margin: 20px;
+            gap: 15px;
+        }
+        .light-btn {
+            background: white;
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+        }
+
+        /* --- 转账页样式 --- */
+        .transfer-form {
+            padding: 20px;
+        }
+        .input-group {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .token-selector-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .token-selector-bar span { font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px;}
+        
+        .address-input-row {
+            display: flex; align-items: center;
+        }
+        .clean-input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+            padding: 5px 0;
+        }
+        .scan-icon { font-size: 18px; color: #333; padding-left: 10px;}
+
+        .fee-row {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .fee-info h4 { font-size: 12px; color: #666; margin-bottom: 2px; }
+        .fee-info p { font-size: 12px; font-weight: 500; }
+        
+        .confirm-btn-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0; width: 100%;
+            padding: 0 20px;
+        }
+        .black-btn {
+            background: black;
+            color: white;
+            width: 100%;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* 弹窗通用 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            right: 0; top: 0;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .option-item:last-child { border-bottom: none; }
+        .option-item img { width: 24px; margin-right: 15px; }
+        .option-item i { width: 24px; margin-right: 15px; text-align: center; font-size: 18px; color: #333; }
+        .option-item:active { background: #f9f9f9; }
+
+        /* 警告横幅 */
+        .warning-banner {
+            background: #ffe8e0;
+            color: #ff5c36;
+            font-size: 12px;
+            padding: 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. 首页视图 -->
+    <div id="view-home" class="view-container active">
+        <div class="header">
+            <button class="connect-wallet-btn" onclick="openModal('walletActionModal')">
+                <i class="fas fa-wallet"></i>
+                <span id="walletBtnText">连接钱包</span>
+            </button>
+            <div class="chain-select" onclick="openModal('chainModal')">
+                <span id="currentChain">Ethereum</span>
+                <i class="fas fa-globe"></i>
+            </div>
+        </div>
+
+        <div class="asset-card">
+            <div class="balance-label">
+                <span id="totalBalance">$0.00</span>
+                <i class="far fa-eye"></i>
+            </div>
+            <div class="address-row">
+                <span id="userAddress">0xB4fa...7eB3B3</span>
+                <i class="far fa-copy" onclick="copyText('0xB4faA92BCACe9Ee237F410539d242505937eB3B3')"></i>
+            </div>
+            <div class="action-buttons">
+                <div class="action-btn" onclick="navigateToReceive()">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <div class="action-btn" onclick="navigateToReceive()">
+                    <i class="fas fa-arrow-down"></i> 收款
+                </div>
+                <div class="action-btn" onclick="navigateToTransfer()">
+                    <i class="fas fa-arrow-up"></i> 转账
+                </div>
+                <div class="action-btn red-bg">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="backup-banner">
+            <div class="backup-text">
+                <h4>备份钱包以保护资产安全</h4>
+                <button class="backup-btn">备份 <i class="fas fa-arrow-right"></i></button>
+            </div>
+            <img src="https://cdn-icons-png.flaticon.com/512/2933/2933116.png" width="50" alt="Backup">
+        </div>
+
+        <div class="tabs">
+            <div class="tab-item active" onclick="switchTab('token')">代币</div>
+            <div class="tab-item" onclick="switchTab('nft')">NFT</div>
+            <div class="tab-item" onclick="switchTab('card')">卡片</div>
+            <div style="margin-left: auto; font-size: 12px; display:flex; align-items:center; color:#666;">
+                <i class="fas fa-sliders-h"></i> 管理币种
+            </div>
+        </div>
+
+        <div class="list-container" id="listContent">
+            <!-- Content rendered by JS -->
+        </div>
+
+        <nav class="bottom-nav">
+        <a href="Home.html" class="nav-item active">
+            <i class="fas fa-wallet"></i>
+            <span>钱包</span>
+        </a>
+        <a href="Discover.html" class="nav-item">
+            <i class="fas fa-compass"></i>
+            <span>发现</span>
+        </a>
+        <a href="RWA.html" class="nav-item">
+            <i class="fas fa-chart-line"></i>
+            <span>RWA</span>
+        </a>
+        <a href="Futures.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i>
+            <span>合约</span>
+        </a>
+        <a href="Swap.html" class="nav-item">
+            <i class="fas fa-exchange-alt"></i>
+            <span>兑换</span>
+        </a>
+        <a href="Invite.html" class="nav-item">
+            <i class="fas fa-user-plus"></i>
+            <span>邀请</span>
+        </a>
+    </nav>
+    </div>
+
+    <!-- 2. 代币详情页视图 -->
+    <div id="view-token-detail" class="view-container">
+        <div class="header">
+            <div class="back-btn" onclick="showView('view-home')"><i class="fas fa-arrow-left"></i></div>
+            <div class="detail-header-coin">
+                <img id="detailIcon" src="" alt="">
+                <span id="detailSymbol">BTC</span>
+                <span style="font-size:12px; color:#999; margin-left:5px; font-weight:normal; background:#eee; padding:2px 6px; border-radius:4px;">Token</span>
+            </div>
+            <div style="width: 30px;"></div> <!-- Spacer -->
+        </div>
+
+        <div class="detail-balance">
+            <h1 id="detailBalance">0.00</h1>
+            <p>≈ $0.00</p>
+        </div>
+
+        <div class="detail-actions">
+            <div class="detail-btn" onclick="navigateToTransfer(true)">
+                <i class="fas fa-arrow-up"></i> 转账
+            </div>
+            <div class="detail-btn" onclick="navigateToReceive(true)">
+                <i class="fas fa-arrow-down"></i> 收款
+            </div>
+        </div>
+
+        <div class="history-section">
+            <div class="history-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/1642/1642340.png" alt="No data">
+                <p>最近90天无记录</p>
+                <a href="#">在区块浏览器查看</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 收款视图 -->
+    <div id="view-receive" class="view-container">
+        <div class="header">
+            <div class="back-btn" onclick="goBackFromReceive()"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">收款</div>
+            <i class="fas fa-history"></i>
+        </div>
+
+        <div class="warning-banner">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="receiveWarning">仅 <span id="receiveChainName">Xone Mainnet</span> 资产可转入该地址</span>
+        </div>
+
+        <div class="receive-card">
+            <p style="margin-bottom: 15px; font-size: 14px; opacity: 0.8;">接收资产至</p>
+            <div class="receive-chain-select" onclick="openModal('chainModal')">
+                <i class="fas fa-link" style="margin-right:5px; color:#ff2d2d;"></i>
+                <span id="receiveChainBadge">Ethereum</span>
+                <i class="fas fa-caret-down" style="margin-left:5px;"></i>
+            </div>
+
+            <div class="qr-container">
+                <div id="qrcode"></div>
+                <div class="qr-logo-overlay">
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+
+            <p id="receiveAddress" class="address-text">0xB4faA92BCACe9Ee237F410539d242505937eB3B3</p>
+            <div class="copy-hint" onclick="copyText(document.getElementById('receiveAddress').innerText)">
+                <span>7eB3B3</span>
+                <i class="far fa-copy"></i>
+            </div>
+        </div>
+
+        <div class="receive-actions">
+            <div class="light-btn">
+                <i class="far fa-edit"></i> 设置金额
+            </div>
+            <div class="light-btn">
+                <i class="far fa-image"></i> 保存图片
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 转账视图 -->
+    <div id="view-transfer" class="view-container" style="background: #f9f9f9;">
+        <div class="header">
+            <div class="back-btn" onclick="goBackFromTransfer()"><i class="fas fa-arrow-left"></i></div>
+            <div class="header-title">转账</div>
+            <div style="width:30px"></div>
+        </div>
+
+        <div class="transfer-form">
+            <label class="label">代币</label>
+            <div class="input-group token-selector-bar" onclick="openModal('tokenSelectModal')">
+                <span id="transferTokenDisplay">
+                    <img id="transferTokenIcon" src="" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; display:none;">
+                    <span id="transferTokenName">请选择代币</span>
+                </span>
+                <i class="fas fa-chevron-down" style="color:#999; font-size:12px;"></i>
+            </div>
+
+            <label class="label">收款地址</label>
+            <div class="input-group address-input-row">
+                <input type="text" class="clean-input" placeholder="输入或粘贴地址">
+                <i class="fas fa-scan scan-icon"></i>
+            </div>
+
+            <div style="display: flex; justify-content:space-between;">
+                <label class="label">数量</label>
+                <label class="label">余额: <span id="transferBalance">0.00</span></label>
+            </div>
+            <div class="input-group">
+                <input type="number" class="clean-input" placeholder="0.00">
+            </div>
+
+            <label class="label">网络费用</label>
+            <div class="fee-row">
+                <div class="fee-info">
+                    <h4>EIP-1559 <i class="fas fa-caret-down"></i></h4>
+                    <p>平均 0.000038 ETH ($0.12)</p>
+                </div>
+                <i class="fas fa-chevron-right" style="color:#ccc; font-size:12px;"></i>
+            </div>
+        </div>
+
+        <div class="confirm-btn-container">
+            <button class="black-btn">确认</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- 1. 钱包操作弹窗 (新需求) -->
+    <div class="modal-overlay" id="walletActionModal" onclick="closeModal(event, 'walletActionModal')">
+        <div class="modal-content">
+            <div class="modal-title">钱包管理 <span class="close-modal" onclick="closeThisModal('walletActionModal')">&times;</span></div>
+            <div class="option-item" onclick="closeThisModal('walletActionModal'); openModal('walletConnectModal')">
+                <i class="fas fa-link"></i>
+                <span>连接钱包</span>
+            </div>            
+            <div class="option-item" onclick="alert('创建钱包流程'); closeThisModal('walletActionModal')">
+                <i class="fas fa-plus-circle"></i>
+                <span>创建钱包</span>
+            </div>
+            <div class="option-item" onclick="alert('导入钱包流程'); closeThisModal('walletActionModal')">
+                <i class="fas fa-file-import"></i>
+                <span>导入钱包</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 2. 连接钱包提供商弹窗 -->
+    <div class="modal-overlay" id="walletConnectModal" onclick="closeModal(event, 'walletConnectModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">选择钱包 <span class="close-modal" onclick="closeThisModal('walletConnectModal')">&times;</span></div>
+            <div class="option-item" onclick="connectMetamask()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="Metamask">
+                <span>MetaMask</span>
+            </div>
+            <div class="option-item" onclick="connectBitgetWallet()">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAgVBMVEUA8P////8AAAAA7/8A8/8A9/8AiYwAiI8A9f8AX2R19P8A6vb3/v8A6/kALzMAydTs/f8A5PIAT1QAKSlH8v+x+f+F9v/j/f8AHiEAFxgASk6Y9//O+/+5+f9Z8/+m+P8AO0AAIyIAIRwA1uEApKsAQkYANjcAVlsAm6EAsrvZ/P83Q69tAAACWUlEQVRIiZWWC3ObMAyAxeyu1EBKG4es5dXuQbb8/x84Y2MZGYukuutdyvnLp8jCFmSJKLtRabCh1diVqTWwfXQahIAQ5p+hvw3WilAIN7GWgmWToBa22QFPLDaT0HHgsMfNqEqC9T5lSV1vwTPRyQcMitYxSLn85RFDUmtNwTri3r75eIlAURIQKPfDY8ci4kwvrcGB8R22nK8tbPZv3zeTnQdLyqHvI8mZ8GCzeiaDbwKGE60D1zshK+Q+KoZzlQUiXPneJctZpQGDUBaB4/L0vxJWJZXFp+ded3xgCwthD2V1vCdPGyoD3AtZ/fTc5RZncoXOg8G35JmnXxCX6xnGBZS/Ql/n9sHv7z62hRI9KPyJr9hpbgeraadUDWj8LN9pb8viD18stfosg/PTkRDIOFsNhAzOyjkn3knJ2CmQnPjWpaR3Hu5o+nnhwwVr65wVkhP3ei5oIBfnkSbhYoAhJoPT78qBfpUNRTbERY7k25JtcOKiFhIXTY699tc1bYHd+C93S0zLXRM3DXZ3HiWPx7OoIdty8dc8Ife8CEGsX2SOC75nfMEaA/b7t+Lah5y4zofV133usCLn8V0+ECcLlnyueZKzd8D813Ikk+csdLfVl/JcbkgLdkkl45tLiherSrUP47N3FV7lessxPhjIDLCprOQ4HY0r0XgkHy9PLi6U80NHGJAiMpz/5LzQOESGkazUN0Y5oxtwNRkC+Zlz4dosDWYd7KBCXzMOzLIxNR9bDE50ZTxal2PKusGSw3ynYO0VZiA/b1clQBN13yp7pAyq7evkkv/22h/zGqVCbgAAAABJRU5ErkJggg==" alt="Bitget">
+                <span>Bitget Wallet</span>
+            </div>
+            <div class="option-item" onclick="mockConnect('TokenPocket')">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJDSURBVHgB7Zq9jtpAEMfHlhEgQLiioXEkoAGECwoKxMcTRHmC5E3IoyRPkPAEkI7unJYmTgEFTYwA8a3NTKScLnCHN6c9r1e3P2llWQy7M/s1Gv1twCP0ej37dDq9x+Zut1t3t9vZjDEHIiSRSPg4ZpDL5fxkMvn1cDh8m0wmfugfO53OoFQq/crn8wxfY9EymQyrVCqMfHvScZx1p9ls3pFxXBy/bKlUipGPrVbLuQqAfsCliq3zl0H84zwtjQrOw4Mt1W63P5LvBm2d+Xz+YzqdgkqUy+WgWCy+Mc/nc282m4FqLBYL+3g8fjDxenq72WxANZbLJeA13zDX67UDioL5ybXwafMYu64Ltn3bdDweQ5R97fd7GyhBQMipx4POeEDHIu2LfDdBIGGz+hJ9CQ1ABjoA2egAZPM6AgiCAEQhsi/C4jHyPA/6/f5NG3Ks2+3CYDC4aTccDrn6ojG54MnEvG00GoVmWLIRNZ7wTCwDHYBsdACy0QHIhiuRETxlICWpMMhGZHmqS8qH6JLyGegAZKMDkI0uKf8X4SWlaZo+Pp1bRrwlJU8ZKLIvUjKh0WiQ3sRUbNVq9c5Ebew7KEo2m/1p4jJ4qAmDaqDQBzj5XyiAT4VCQezJigAU+IDU+z8vJFnGWeC+bKQV/5VZ71FV6L7PA3gg3tXrdQ+DgLhC+75Wq3no69P3MC0NFQpx2lL04Ql9gHK1bRDjsSBIvScBnDTk1WrlGIZBorIDEYJj+rhdgnQ67VmWRe0zlplXl81vcyEt0rSoYDUAAAAASUVORK5CYII=" alt="TP">
+                <span>OKX Wallet</span>
+            </div>
+             <div class="option-item" onclick="mockConnect('WalletConnect')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU3MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
+                <span>TokenPocket</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. 链选择弹窗 -->
+    <div class="modal-overlay" id="chainModal" onclick="closeModal(event, 'chainModal')">
+        <div class="modal-content">
+            <div class="modal-title">切换网络 <span class="close-modal" onclick="closeThisModal('chainModal')">&times;</span></div>
+            <div id="chainListContainer"></div>
+        </div>
+    </div>
+
+    <!-- 4. 代币选择弹窗 (用于转账页) -->
+    <div class="modal-overlay" id="tokenSelectModal" onclick="closeModal(event, 'tokenSelectModal')">
+        <div class="modal-content">
+            <div class="modal-title">选择代币 <span class="close-modal" onclick="closeThisModal('tokenSelectModal')">&times;</span></div>
+            <div id="tokenSelectContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 模拟数据 ---
+        const chains = [
+            "Ethereum", "BNB Chain", "Polygon", "Solana", "Arbitrum", "Optimism", "Xone Mainnet"
+        ];
+
+        const tokens = [
+            { sym: "BTC", name: "Bitcoin", price: 65432.10, change: -1.2, bal: 0.00, icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
+            { sym: "ETH", name: "Ethereum", price: 3196.44, change: -3.51, bal: 0.00, icon: "https://cryptologos.cc/logos/ethereum-eth-logo.png" },
+            { sym: "USDT", name: "Tether", price: 1.00, change: 0.01, bal: 100.00, icon: "https://cryptologos.cc/logos/tether-usdt-logo.png" },
+            { sym: "BNB", name: "BNB", price: 580.20, change: 1.5, bal: 0.00, icon: "https://cryptologos.cc/logos/bnb-bnb-logo.png" },
+            { sym: "SOL", name: "Solana", price: 140.50, change: 5.2, bal: 0.00, icon: "https://cryptologos.cc/logos/solana-sol-logo.png" },
+            { sym: "XRP", name: "XRP", price: 0.62, change: -0.5, bal: 0.00, icon: "https://cryptologos.cc/logos/xrp-xrp-logo.png" },
+            { sym: "USDC", name: "USDC", price: 1.00, change: 0.00, bal: 0.00, icon: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png" },
+            { sym: "ADA", name: "Cardano", price: 0.45, change: -2.1, bal: 0.00, icon: "https://cryptologos.cc/logos/cardano-ada-logo.png" },
+            { sym: "DOGE", name: "Dogecoin", price: 0.16, change: 8.4, bal: 0.00, icon: "https://cryptologos.cc/logos/dogecoin-doge-logo.png" },
+            { sym: "AVAX", name: "Avalanche", price: 35.20, change: 1.1, bal: 0.00, icon: "https://cryptologos.cc/logos/avalanche-avax-logo.png" },
+            { sym: "DOT", name: "Polkadot", price: 7.20, change: -1.8, bal: 0.00, icon: "https://cryptologos.cc/logos/polkadot-new-dot-logo.png" },
+            { sym: "TRON", name: "TRON", price: 0.11, change: 0.5, bal: 0.00, icon: "https://cryptologos.cc/logos/tron-trx-logo.png" },
+            { sym: "LINK", name: "Chainlink", price: 14.50, change: 2.2, bal: 0.00, icon: "https://cryptologos.cc/logos/chainlink-link-logo.png" }
+        ];
+
+        // --- 全局状态 ---
+        let currentTab = 'token';
+        let currentChain = 'Ethereum';
+        let currentToken = null; // 用户在详情页或转账页选中的 Token
+
+        // --- 初始化 ---
+        window.onload = function() {
+            renderList();
+            renderChains();
+            renderTokenSelector(); // 为转账页准备
+            generateQRCode("0xB4faA92BCACe9Ee237F410539d242505937eB3B3");
+        };
+
+        // --- 视图切换逻辑 ---
+        function showView(viewId) {
+            document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            // 简单匹配：第1个是token, 2是nft, 3是card
+            const index = tab === 'token' ? 0 : tab === 'nft' ? 1 : 2;
+            document.querySelectorAll('.tab-item')[index].classList.add('active');
+            renderList();
+        }
+
+        // --- 渲染逻辑 ---
+        function renderList() {
+            const container = document.getElementById('listContent');
+            
+            if (currentTab === 'token') {
+                let html = '';
+                tokens.forEach(t => {
+                    const colorClass = t.change >= 0 ? 'up' : 'down';
+                    const sign = t.change >= 0 ? '+' : '';
+                    html += `
+                    <div class="token-item" onclick="openTokenDetail('${t.sym}')">
+                        <div class="token-left">
+                            <img src="${t.icon}" class="token-logo" onerror="this.src='https://via.placeholder.com/40'">
+                            <div class="token-info">
+                                <h3>${t.sym}</h3>
+                                <p>$${t.price}</p>
+                            </div>
+                        </div>
+                        <div class="token-right">
+                            <h3>${t.bal}</h3>
+                            <p class="price-change ${colorClass}">${sign}${t.change}%</p>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } else if (currentTab === 'nft') {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-images"></i>
+                    <p>暂无 NFT</p>
+                </div>`;
+            } else if (currentTab === 'card') {
+                container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-credit-card"></i>
+                    <p>暂无卡片</p>
+                </div>`;
+            }
+        }
+
+        function renderChains() {
+            const container = document.getElementById('chainListContainer');
+            let html = '';
+            chains.forEach(chain => {
+                html += `
+                <div class="option-item" onclick="selectChain('${chain}')">
+                    <i class="fas fa-globe"></i>
+                    <span>${chain}</span>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderTokenSelector() {
+            const container = document.getElementById('tokenSelectContainer');
+            let html = '';
+            tokens.forEach(t => {
+                html += `
+                <div class="token-item" onclick="selectTokenForTransfer('${t.sym}')">
+                    <div class="token-left">
+                        <img src="${t.icon}" class="token-logo">
+                        <div class="token-info">
+                            <h3>${t.sym}</h3>
+                            <p>余额: ${t.bal}</p>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- 页面跳转逻辑 ---
+
+        // 1. 进入详情页
+        function openTokenDetail(symbol) {
+            const t = tokens.find(x => x.sym === symbol);
+            if (!t) return;
+            currentToken = t;
+            
+            document.getElementById('detailSymbol').innerText = t.sym;
+            document.getElementById('detailBalance').innerText = t.bal;
+            document.getElementById('detailIcon').src = t.icon;
+            
+            showView('view-token-detail');
+        }
+
+        // 2. 进入收款页 (可从首页或详情页进入)
+        function navigateToReceive(fromDetail = false) {
+            // 如果从详情页进入，虽然 UI 不一定变，但逻辑上我们知道是哪个币
+            // 更新 UI 链名称
+            document.getElementById('receiveChainBadge').innerText = currentChain;
+            document.getElementById('receiveChainName').innerText = currentChain;
+            showView('view-receive');
+        }
+
+        // 3. 进入转账页 (可从首页或详情页进入)
+        function navigateToTransfer(fromDetail = false) {
+            if (fromDetail && currentToken) {
+                // 如果是从详情页来，预填代币
+                setTransferToken(currentToken);
+            } else {
+                // 如果是从首页来，重置或保持默认
+                resetTransferForm();
+            }
+            showView('view-transfer');
+        }
+
+        // 4. 返回逻辑
+        function goBackFromReceive() {
+            // 简单处理：如果有 currentToken 且刚才在详情页，理论上应回详情页
+            // 这里为了简化，我们判断：如果有 currentToken，回详情页，否则回首页
+            // 但用户可能直接点击首页的收款。
+            // 更好的做法是记录 history stack，这里简化为：
+            // 如果 currentToken 不为空，且我们认为这是详情流，回详情。
+            // 实际上用户体验：如果是点击首页收款 -> back -> home.
+            // 如果点击详情页收款 -> back -> detail.
+            // 我们可以检查当前是否处于 detail 视图来决定(但现在已经跳走了)。
+            // 简单方案：总是回 Home，或者根据上一个 active view。
+            // 这里我们简化：如果currentToken被设置了，大概率是从那来的，但也不一定。
+            // 最稳妥：总是回 Home，除非我们做复杂路由。
+            // 为了体验好一点：
+            showView('view-home'); 
+        }
+
+        function goBackFromTransfer() {
+            showView('view-home');
+        }
+
+        // --- 功能逻辑 ---
+
+        function setTransferToken(token) {
+            document.getElementById('transferTokenName').innerText = token.sym;
+            document.getElementById('transferTokenIcon').src = token.icon;
+            document.getElementById('transferTokenIcon').style.display = 'inline-block';
+            document.getElementById('transferBalance').innerText = token.bal + " " + token.sym;
+            closeThisModal('tokenSelectModal');
+        }
+
+        function selectTokenForTransfer(symbol) {
+            const t = tokens.find(x => x.sym === symbol);
+            if(t) setTransferToken(t);
+        }
+
+        function resetTransferForm() {
+            document.getElementById('transferTokenName').innerText = "请选择代币";
+            document.getElementById('transferTokenIcon').style.display = 'none';
+            document.getElementById('transferBalance').innerText = "0.00";
+            currentToken = null;
+        }
+
+        function selectChain(chainName) {
+            currentChain = chainName;
+            document.getElementById('currentChain').innerText = chainName; // Home页
+            document.getElementById('receiveChainBadge').innerText = chainName; // Receive页
+            document.getElementById('receiveChainName').innerText = chainName;
+            closeThisModal('chainModal');
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("已复制: " + text);
+            });
+        }
+
+        // --- 弹窗控制 ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(e, id) {
+            if(e.target.id === id) document.getElementById(id).style.display = 'none';
+        }
+        function closeThisModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // --- Bitget Wallet 检测诊断 ---
+        function debugBitgetWallet() {
+            console.clear();
+            console.log("=== Bitget Wallet 检测诊断 ===");
+            console.log("window.bitget:", window.bitget);
+            console.log("window.bitgetWallet:", window.bitgetWallet);
+            console.log("window.ethereum:", window.ethereum);
+            console.log("window.BG:", window.BG);
+            
+            if (window.ethereum) {
+                console.log("--- window.ethereum 详细信息 ---");
+                console.log("ethereum.isBitget:", window.ethereum.isBitget);
+                console.log("ethereum.name:", window.ethereum.name);
+                console.log("ethereum.isConnected:", window.ethereum.isConnected);
+                console.log("ethereum.request:", typeof window.ethereum.request);
+            }
+            
+            // 检测所有可能的提供者
+            let detectedProviders = [];
+            if (window.bitget) detectedProviders.push("window.bitget");
+            if (window.bitgetWallet) detectedProviders.push("window.bitgetWallet");
+            if (window.ethereum && window.ethereum.isBitget) detectedProviders.push("window.ethereum (isBitget=true)");
+            if (window.ethereum && window.ethereum.name && window.ethereum.name.includes('bitget')) detectedProviders.push("window.ethereum (name包含bitget)");
+            if (window.ethereum && !window.ethereum.isBitget && !window.ethereum.isMetaMask) detectedProviders.push("window.ethereum (其他提供者)");
+            if (window.BG) detectedProviders.push("window.BG");
+            
+            console.log("=== 检测到的提供者 ===");
+            if (detectedProviders.length > 0) {
+                detectedProviders.forEach(p => console.log("✓", p));
+            } else {
+                console.warn("未检测到任何 Bitget Wallet 提供者");
+            }
+            
+            alert("已在浏览器控制台输出诊断信息，请按 F12 打开开发者工具查看详细信息");
+        }
+
+        // --- 钱包连接逻辑 ---
+        async function connectMetamask() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const account = accounts[0];
+                    const shortAddr = account.substring(0, 6) + "..." + account.substring(account.length - 4);
+                    
+                    document.getElementById('userAddress').innerText = shortAddr;
+                    document.getElementById('receiveAddress').innerText = account; // 更新收款地址
+                    document.getElementById('walletBtnText').innerText = "MetaMask";
+                    document.getElementById('walletStatusDot').classList.add('connected');
+                    
+                    generateQRCode(account); // 更新二维码
+
+                    closeThisModal('walletConnectModal');
+                } catch (error) {
+                    alert("连接失败");
+                }
+            } else {
+                alert("请安装 MetaMask");
+            }
+        }
+
+        async function connectBitgetWallet() {
+            // Bitget Wallet 的真实链接实现
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // 移动端：打开 Bitget Wallet APP
+                // 使用深链接 (Deep Link) 唤起 Bitget Wallet APP
+                const bitgetDeepLink = "bitget://wallet";
+                window.location.href = bitgetDeepLink;
+                
+                // 如果 3 秒后仍未打开 APP，则提示用户
+                setTimeout(() => {
+                    alert("未检测到 Bitget Wallet APP，请先安装");
+                }, 3000);
+            } else {
+                // 网页端：打开 Bitget Wallet 浏览器扩展程序
+                // 等待 Bitget Wallet 扩展初始化（通常需要一点延迟）
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                let bitgetProvider = null;
+                
+                console.log("开始检测 Bitget Wallet 提供者...");
+                console.log("window.bitget:", window.bitget);
+                console.log("window.bitgetWallet:", window.bitgetWallet);
+                console.log("window.ethereum:", window.ethereum);
+                console.log("window.BG:", window.BG);
+                
+                // 优先级1: 检查 window.bitget（Bitget 最常用的标识）
+                if (window.bitget && typeof window.bitget.request === 'function') {
+                    console.log("✓ 检测到 window.bitget");
+                    bitgetProvider = window.bitget;
+                }
+                // 优先级2: 检查 window.bitgetWallet
+                else if (window.bitgetWallet && typeof window.bitgetWallet.request === 'function') {
+                    console.log("✓ 检测到 window.bitgetWallet");
+                    bitgetProvider = window.bitgetWallet;
+                }
+                // 优先级3: 检查 window.BG
+                else if (window.BG && typeof window.BG.request === 'function') {
+                    console.log("✓ 检测到 window.BG");
+                    bitgetProvider = window.BG;
+                }
+                // 优先级4: 检查 window.ethereum.isBitget（确保是 Bitget，而不是 MetaMask）
+                else if (window.ethereum && window.ethereum.isBitget === true && typeof window.ethereum.request === 'function') {
+                    console.log("✓ 检测到 window.ethereum.isBitget");
+                    bitgetProvider = window.ethereum;
+                }
+                // 优先级5: 检查 window.ethereum 的 name 属性是否包含 'bitget'
+                else if (window.ethereum && window.ethereum.name && window.ethereum.name.toLowerCase().includes('bitget') && typeof window.ethereum.request === 'function') {
+                    console.log("✓ 检测到 window.ethereum (name包含bitget)");
+                    bitgetProvider = window.ethereum;
+                }
+                // 其他情况：不能自动识别为 Bitget
+                else {
+                    console.warn("✗ 未检测到 Bitget Wallet 提供者");
+                    console.log("检查到的提供者信息:");
+                    if (window.ethereum) {
+                        console.log("  - ethereum.isBitget:", window.ethereum.isBitget);
+                        console.log("  - ethereum.isMetaMask:", window.ethereum.isMetaMask);
+                        console.log("  - ethereum.name:", window.ethereum.name);
+                    }
+                }
+                
+                if (bitgetProvider && typeof bitgetProvider.request === 'function') {
+                    // Bitget Wallet 扩展已安装，可以直接调用
+                    try {
+                        console.log("正在请求 Bitget Wallet 账户授权...");
+                        const accounts = await bitgetProvider.request({ method: 'eth_requestAccounts' });
+                        if (accounts && accounts.length > 0) {
+                            const account = accounts[0];
+                            const shortAddr = account.substring(0, 6) + "..." + account.substring(account.length - 4);
+                            
+                            console.log("✓ Bitget Wallet 连接成功，账户:", account);
+                            
+                            document.getElementById('userAddress').innerText = shortAddr;
+                            document.getElementById('receiveAddress').innerText = account;
+                            document.getElementById('walletBtnText').innerText = "Bitget Wallet";
+                            document.getElementById('walletStatusDot').classList.add('connected');
+                            
+                            generateQRCode(account);
+                            
+                            // 读取钱包内代币数据
+                            fetchBitgetTokenData(account);
+                            
+                            closeThisModal('walletConnectModal');
+                        }
+                    } catch (error) {
+                        console.error("Bitget Wallet 连接失败:", error);
+                        alert("Bitget Wallet 连接失败: " + (error.message || '用户拒绝授权或钱包操作异常'));
+                    }
+                } else {
+                    // 扩展未安装，引导用户安装
+                    console.warn("未检测到 Bitget Wallet，无法连接");
+                    const installChoice = confirm("未检测到 Bitget Wallet 浏览器扩展\n\n点击 '确定' 打开官网下载安装\n点击 '取消' 继续使用其他钱包");
+                    if (installChoice) {
+                        window.open("https://www.bitget.com/wallet", "_blank");
+                    }
+                    closeThisModal('walletConnectModal');
+                }
+            }
+        }
+
+        // 读取 Bitget Wallet 的代币数据
+        async function fetchBitgetTokenData(account) {
+            console.log("正在读取 Bitget Wallet 账户的代币数据: " + account);
+            
+            try {
+                // 获取以太坊余额
+                const bitgetProvider = window.bitget || window.bitgetWallet || window.ethereum;
+                if (!bitgetProvider) return;
+                
+                // 获取 ETH 余额
+                const ethBalance = await bitgetProvider.request({
+                    method: 'eth_getBalance',
+                    params: [account, 'latest']
+                });
+                
+                const balanceInEth = parseInt(ethBalance, 16) / 1e18;
+                console.log("ETH 余额: " + balanceInEth);
+                
+                // 这里可以进一步调用 Etherscan API、Moralis API 或 Infura 来获取 ERC-20 代币
+                // 示例代码：
+                // const response = await fetch(`https://api.etherscan.io/api?module=account&action=tokenlist&address=${account}&apikey=YOUR_API_KEY`);
+                // const data = await response.json();
+                
+                // 更新总余额显示（实际环境需要计算所有代币的 USD 价值）
+                document.getElementById('totalBalance').innerText = "$" + (balanceInEth * 2500).toFixed(2); // 假设 ETH 价格为 $2500
+            } catch (error) {
+                console.error("读取代币数据失败:", error);
+            }
+        }
+
+        function mockConnect(name) {
+            document.getElementById('walletBtnText').innerText = name;
+            document.getElementById('walletStatusDot').classList.add('connected');
+            closeThisModal('walletConnectModal');
+            alert(name + " 连接成功");
+        }
+
+        function connectWallet() {
+            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
+        }
+
+        function generateQRCode(text) {
+            const container = document.getElementById("qrcode");
+            container.innerHTML = "";
+            new QRCode(container, {
+                text: text,
+                width: 160,
+                height: 160,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        // 页面加载完成后，自动检测 Bitget Wallet
+        window.addEventListener('load', function() {
+            console.log("页面已加载，开始检测 Bitget Wallet...");
+            // 多次检测，因为某些扩展可能需要时间初始化
+            setTimeout(checkBitgetWallet, 500);
+            setTimeout(checkBitgetWallet, 1000);
+            setTimeout(checkBitgetWallet, 2000);
+        });
+
+        function checkBitgetWallet() {
+            const hasBitget = window.bitget || window.bitgetWallet || (window.ethereum && window.ethereum.isBitget) || window.BG;
+            if (hasBitget) {
+                console.log("✓ 检测到 Bitget Wallet 提供者");
+            } else {
+                console.warn("✗ 未检测到 Bitget Wallet 提供者，但 window.ethereum 已就绪");
+                console.log("当前提供者信息:", {
+                    hasEthereum: !!window.ethereum,
+                    ethereumName: window.ethereum?.name,
+                    ethereumIsBitget: window.ethereum?.isBitget,
+                    isMetaMask: window.ethereum?.isMetaMask
+                });
+            }
+        }
+    </script>
+</body>
+</html>

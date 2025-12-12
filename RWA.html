@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RWA Stock Tokens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f2f3f5;
+            --card-white: #ffffff;
+            --text-main: #1d1d1f;
+            --text-sub: #86868b;
+            --primary-green: #34c759;
+            --primary-red: #ff3b30;
+            --gradient-btn: linear-gradient(135deg, #ffd33d 0%, #ff9500 100%); /* 黄橙渐变 */
+            --nav-height: 80px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding-bottom: var(--nav-height);
+            overflow-x: hidden;
+        }
+
+        /* 详情页需要更多底部空间 */
+        #detailView {
+            padding-bottom: 80px;
+        }
+
+        /* --- 页面容器管理 (模拟单页路由) --- */
+        .page-view {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            animation: fadeIn 0.3s;
+        }
+        .page-view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 列表页 UI --- */
+        .header {
+            padding: 50px 20px 10px; /* 适配全面屏顶部 */
+            background: var(--card-white);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sub-title {
+            font-size: 14px;
+            color: var(--text-sub);
+            margin-top: 5px;
+        }
+
+        .search-bar {
+            margin-top: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            color: var(--text-sub);
+        }
+        .search-bar input {
+            border: none;
+            background: transparent;
+            margin-left: 10px;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        /* 分类 Tabs */
+        .category-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 20px;
+            padding: 15px 0 5px;
+            scrollbar-width: none;
+        }
+        .category-scroll::-webkit-scrollbar { display: none; }
+
+        .cat-item {
+            font-size: 15px;
+            color: var(--text-sub);
+            white-space: nowrap;
+            padding-bottom: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .cat-item.active {
+            color: var(--text-main);
+            font-weight: 700;
+            border-bottom: 2px solid var(--text-main);
+        }
+
+        /* 列表项 */
+        .stock-list { padding: 10px 15px; }
+
+        .stock-item {
+            background: var(--card-white);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: transform 0.1s;
+        }
+        .stock-item:active { transform: scale(0.98); }
+
+        .item-left { display: flex; align-items: center; gap: 12px; }
+        .stock-logo {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            object-fit: contain;
+            background: #f9f9f9;
+            padding: 5px;
+            position: relative;
+        }
+        .ondo-badge {
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 16px; height: 16px;
+        }
+        
+        .stock-info h3 { font-size: 16px; margin-bottom: 4px; }
+        .stock-info p { font-size: 12px; color: var(--text-sub); }
+
+        .item-right { text-align: right; }
+        .price { font-size: 16px; font-weight: 600; display: block; }
+        .change { font-size: 13px; font-weight: 500; }
+        .up { color: var(--primary-green); }
+        .down { color: var(--primary-red); }
+
+        /* --- 详情页 (K线) UI --- */
+        .detail-nav {
+            display: flex;
+            align-items: center;
+            padding: 40px 20px 10px;
+            background: var(--card-white);
+        }
+        .back-btn {
+            font-size: 20px;
+            padding: 10px;
+            margin-left: -10px;
+            cursor: pointer;
+        }
+        .detail-title {
+            flex: 1;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+            margin-right: 20px; /* 平衡返回按钮 */
+        }
+
+        .chart-header {
+            padding: 20px;
+            background: var(--card-white);
+        }
+        .big-price { font-size: 32px; font-weight: 700; }
+        .big-change { font-size: 14px; margin-top: 5px; }
+
+        .kline-container {
+            width: 100%;
+            height: 350px;
+            background: var(--card-white);
+            margin-top: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kline-container canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* K线页面额外信息 */
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px 0;
+            background: var(--card-white);
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-sub);
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--text-main);
+            color: white;
+        }
+
+        .indicator-tabs {
+            display: flex;
+            gap: 15px;
+            padding: 12px 20px;
+            background: var(--card-white);
+            border-bottom: 1px solid #f0f0f0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .indicator-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .indicator-tab {
+            font-size: 12px;
+            color: var(--text-sub);
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .indicator-tab.active {
+            color: var(--text-main);
+            border-bottom-color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .info-section {
+            background: var(--card-white);
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .info-label {
+            color: var(--text-sub);
+        }
+        .info-value {
+            font-weight: 600;
+            color: var(--text-main);
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .holders-section {
+            background: var(--card-white);
+            padding: 20px;
+        }
+        .holders-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .holder-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 12px;
+        }
+        .holder-item:last-child {
+            border-bottom: none;
+        }
+        .holder-addr {
+            color: var(--text-sub);
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            flex: 1;
+        }
+        .holder-amount {
+            text-align: right;
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 15px 20px 30px;
+            background: var(--card-white);
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 15px;
+            z-index: 200;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-trade {
+            background: var(--gradient-btn);
+            color: white; /* 这里的文字要是白色才清晰 */
+            box-shadow: 0 4px 10px rgba(255, 149, 0, 0.3);
+        }
+
+        /* --- 兑换页 (模拟 Swap) UI --- */
+        .swap-card {
+            background: var(--card-white);
+            margin: 20px;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .input-group {
+            background: #f9f9f9;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .input-group input {
+            border: none;
+            background: transparent;
+            font-size: 24px;
+            width: 60%;
+            outline: none;
+            font-weight: 600;
+        }
+        .token-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-weight: 600;
+        }
+
+        .swap-arrow {
+            text-align: center;
+            margin: -5px 0 5px;
+            position: relative;
+            z-index: 2;
+        }
+        .swap-arrow i {
+            background: white;
+            padding: 8px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: var(--text-sub);
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 20px 0;
+            border-top: 1px solid #eee;
+            z-index: 99;
+        }
+        .nav-item {
+            text-decoration: none;
+            color: #999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            flex: 1;
+        }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--text-main); }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="listView" class="page-view active">
+        <div class="header">
+            <div class="page-title">
+                股票代币 
+                <i class="fas fa-chart-line" style="color: #FF9500; font-size: 24px;"></i>
+            </div>
+            <p class="sub-title">在链上探索代币化股票 (RWA)</p>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="搜索股票代码 (如 AAPL)">
+            </div>
+
+            <div class="category-scroll">
+                <div class="cat-item active" onclick="switchTab(this, 'buffett')">巴菲特持仓</div>
+                <div class="cat-item" onclick="switchTab(this, 'gainers')">涨幅榜</div>
+                <div class="cat-item" onclick="switchTab(this, 'tech')">科技龙头</div>
+                <div class="cat-item" onclick="switchTab(this, 'crypto')">加密概念</div>
+            </div>
+        </div>
+
+        <div class="stock-list" id="stockListContainer">
+            </div>
+    </div>
+
+    <div id="detailView" class="page-view">
+        <div class="detail-nav">
+            <div class="back-btn" onclick="goBack('listView')">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="detail-title" id="detailTitle">--</div>
+        </div>
+
+        <div class="chart-header">
+            <div class="big-price" id="detailPrice">--</div>
+            <div class="big-change" id="detailChange">--</div>
+        </div>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchKlineTab(this, '1d')">1日</button>
+            <button class="tab-btn" onclick="switchKlineTab(this, '1h')">1小时</button>
+            <button class="tab-btn" onclick="switchKlineTab(this, '15m')">15分钟</button>
+            <button class="tab-btn" onclick="switchKlineTab(this, '5m')">5分钟</button>
+        </div>
+
+        <div id="kline" class="kline-container"></div>
+
+        <div class="indicator-tabs">
+            <div class="indicator-tab active">MA</div>
+            <div class="indicator-tab">EMA</div>
+            <div class="indicator-tab">BOLL</div>
+            <div class="indicator-tab">SAR</div>
+        </div>
+
+        <div id="positionInfo" class="info-section" style="margin-top: 1px;">
+            <div class="info-row">
+                <span class="info-label">24小时成交量</span>
+                <span class="info-value" id="volumeInfo">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">流通市值</span>
+                <span class="info-value" id="marketCapInfo">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">52周高点</span>
+                <span class="info-value" id="highInfo">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">52周低点</span>
+                <span class="info-value" id="lowInfo">--</span>
+            </div>
+        </div>
+
+        <div class="holders-section">
+            <div class="holders-title">持币地址</div>
+            <div id="holdersContainer"></div>
+        </div>
+
+        <div class="info-section" style="margin-top: 1px;">
+            <div class="info-row">
+                <span class="info-label">我的仓位</span>
+                <span class="info-value" id="myPositionAmount">0</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">仓位价值</span>
+                <span class="info-value" id="myPositionValue">$0.00</span>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn btn-trade" onclick="goToSwap()">
+                交易 <span id="tradeBtnSymbol"></span>
+            </button>
+        </div>
+    </div>
+
+    <div id="swapView" class="page-view" style="background: #f9f9f9;">
+        <div class="detail-nav">
+            <div class="back-btn" onclick="goBack('detailView')">
+                <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="detail-title">兑换</div>
+        </div>
+
+        <div class="swap-card">
+            <div style="margin-bottom: 10px; font-size:12px; color:#888;">从</div>
+            <div class="input-group">
+                <input type="number" id="payAmount" placeholder="0.00" oninput="calculateSwap()">
+                <div class="token-badge">
+                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="20"> USDT
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: #888; margin-bottom: 15px;">
+                余额: <span id="usdtBalance">1000.00</span>
+            </div>
+
+            <div class="swap-arrow"><i class="fas fa-arrow-down"></i></div>
+
+            <div style="margin-bottom: 10px; font-size:12px; color:#888;">到</div>
+            <div class="input-group">
+                <input type="text" id="receiveAmount" readonly placeholder="0.00">
+                <div class="token-badge">
+                    <img id="swapTokenIcon" src="" width="20"> 
+                    <span id="swapTokenSymbol">TOKEN</span>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:#888; margin-top:15px;">
+                <span>汇率</span>
+                <span id="swapRate">1 Token ≈ $--</span>
+            </div>
+
+            <button class="btn btn-trade" style="margin-top: 25px; width: 100%;" onclick="executeSwap()">
+                确认兑换
+            </button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav" id="mainNav">
+        <a href="Home.html" class="nav-item">
+            <i class="fas fa-wallet"></i> 钱包
+        </a>
+        <a href="Discover.html" class="nav-item">
+            <i class="fas fa-compass"></i> 发现
+        </a>
+        <a href="RWA.html" class="nav-item active">
+            <i class="fas fa-chart-line"></i> RWA
+        </a>
+        <a href="Futures.html" class="nav-item">
+            <i class="fas fa-chart-bar"></i> 合约
+        </a>
+        <a href="Swap.html" class="nav-item">
+            <i class="fas fa-exchange-alt"></i> 兑换
+        </a>
+        <a href="Invite.html" class="nav-item">
+            <i class="fas fa-user-plus"></i> 邀请
+        </a>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // --- 数据配置 ---
+        // 模拟 Ondo 徽章图标
+        const ondoIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAPFBMVEVHcEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACHr/7WAAAAFHRSTlMAS4e24u4Ll/94MmMVWiFw56bL27rxNLUAAAFHSURBVHgBhc9XAqswDETRccOXYhuT/a/1FTm9np8EVAbpjvMhphSDd3pjytzJk554gDC7ZXFzAPCP4xHSqqs1QZx0tQGzNbpSnBVmYLvOA1VSi5jYJFVg0hDtrwNg3wFwtjbKeJvPgK+SVD2QbYcfATSrB10F62gjpJMkN7pdP47uxlYnJbokKJLNbxETN9shFbBZO2ocG1oL40A7HJwyQdrx0m4Fa9wlzy4Fsg6aNtjkRn10uPGucSjhRkygS0MnSFghCRatnKQTq4bb8wK/G95FhFsEt48sMGkopUprmVSLU6ZLiVlKpEmvbL0HqQK5uAdlG1mCLtXEi0nqRGmFJmkNe3rQJW2wSh2yPsiwWQdt0luJJEuBdNwLGjZImyTPkyozDiz2p7SbedHVluDk9E0G6OtSzxY9q4E7x6I3Sj8BxL5OuvoL0gETVwEgE6EAAAAASUVORK5CYII=";
+
+        const stockData = [
+            // 巴菲特持仓
+            { sym: "Von", name: "Visa", price: 345.79, change: 5.83, type: "buffett", icon: "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" },
+            { sym: "MAon", name: "Mastercard", price: 564.11, change: 4.48, type: "buffett", icon: "https://s3-symbol-logo.tradingview.com/country/US--big.svg" },
+            { sym: "UNHon", name: "UnitedHealth", price: 340.10, change: 3.82, type: "buffett", icon: "https://s3-symbol-logo.tradingview.com/crypto/XTVCUNHON--big.svg" },
+            { sym: "AXPon", name: "American Express", price: 388.21, change: 3.49, type: "buffett", icon: "https://upload.wikimedia.org/wikipedia/commons/f/fa/American_Express_logo_%282018%29.svg" },
+            { sym: "KOon", name: "Coca-Cola", price: 69.92, change: 2.15, type: "buffett", icon: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Coca-Cola_logo.svg" },
+            
+            // 科技龙头
+            { sym: "AAPLon", name: "Apple", price: 279.44, change: 0.82, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" },
+            { sym: "GOOGLon", name: "Alphabet Class A", price: 314.51, change: -0.42, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" },
+            { sym: "AMZNon", name: "Amazon", price: 230.77, change: 1.18, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Amazon_icon.svg" },
+            { sym: "MSFTon", name: "Microsoft", price: 484.78, change: 2.34, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" },
+            { sym: "NVDAon", name: "NVIDIA", price: 1200.50, change: 5.20, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/2/21/Nvidia_logo.svg" },
+            
+            // 加密概念
+            { sym: "COINon", name: "Coinbase", price: 271.73, change: 1.60, type: "crypto", icon: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Coinbase_Logomark.svg" },
+            { sym: "MSTRon", name: "MicroStrategy", price: 183.41, change: 2.22, type: "crypto", icon: "https://upload.wikimedia.org/wikipedia/commons/7/7f/MicroStrategy_logo.svg" },
+            { sym: "CRCLon", name: "Circle Internet Group", price: 88.64, change: 3.80, type: "crypto", icon: "https://cryptologos.cc/logos/circle-usdc-logo.png" },
+            { sym: "MARaon", name: "MARA Holdings", price: 11.88, change: 3.03, type: "crypto", icon: "https://cryptologos.cc/logos/marathon-digital-holdings-mara-logo.png" },
+            
+            // 涨幅榜和其他
+            { sym: "QBTSon", name: "D-Wave Quantum", price: 28.08, change: 8.25, type: "tech", icon: "https://cdn.investing.com/entities-logos/763109.svg" },
+            { sym: "RIOTon", name: "Riot Platforms", price: 15.75, change: 4.93, type: "crypto", icon: "https://cryptologos.cc/logos/bitcoin-btc-logo.png" },
+            { sym: "APPon", name: "AppLovin", price: 718.98, change: 4.48, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Applovin_logo.png" },
+            { sym: "NKEon", name: "Nike", price: 68.54, change: 3.98, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/5/51/Swoosh.svg" },
+            { sym: "ADBEon", name: "Adobe", price: 351.43, change: 3.86, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c0/Adobe_Systems_logo_%282024%29.svg" },
+            { sym: "CMGon", name: "Chipotle", price: 34.98, change: 3.86, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/d/d5/Chipotle_Mexican_Grill_logo.svg" },
+            { sym: "DIon", name: "Disney", price: 111.90, change: 3.85, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/7/71/Disney_logo.svg" },
+            { sym: "CVXon", name: "Chevron", price: 152.23, change: 0.01, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Chevron_Logo.svg" },
+            { sym: "SNOWon", name: "Snowflake", price: 220.59, change: 3.51, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/f/ff/Snowflake_Logo.svg" },
+            { sym: "NOWon", name: "ServiceNow", price: 869.28, change: 2.99, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/c/c7/ServiceNow_logo.svg" },
+            { sym: "UBERon", name: "Uber", price: 85.52, change: 2.62, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/5/58/Uber_logo_2018.svg" },
+            { sym: "NFLXon", name: "Netflix", price: 948.05, change: 2.41, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" },
+            { sym: "METAon", name: "Meta Platforms", price: 652.53, change: 2.17, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg" },
+            { sym: "HOODon", name: "Robinhood Markets", price: 124.96, change: -5.51, type: "crypto", icon: "https://upload.wikimedia.org/wikipedia/commons/a/ab/Robinhood_logo.svg" },
+            { sym: "ASMLon", name: "ASML Holding", price: 1124.09, change: 1.50, type: "tech", icon: "https://upload.wikimedia.org/wikipedia/commons/a/a0/ASML.svg" }
+        ];
+
+        let currentSymbol = "";
+        let currentPrice = 0;
+        let currentItem = null;
+        let chart; // K线图实例
+        let candleSeries;
+        let currentKlineTab = '1d'; // 当前K线时间间隔
+
+        // 模拟用户持仓数据
+        const userPositions = {
+            "Von": 104.36,
+            "MAon": 50.12,
+            "UNHon": 25.00,
+            "AAPLon": 30.50
+        };
+
+        // --- 初始化 ---
+        window.onload = function() {
+            renderList('buffett'); // 默认显示巴菲特持仓
+        };
+
+        // --- 渲染列表 ---
+        function switchTab(el, type) {
+            document.querySelectorAll('.cat-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            renderList(type);
+        }
+
+        function renderList(type) {
+            const container = document.getElementById('stockListContainer');
+            container.innerHTML = "";
+            
+            // 简单筛选：buffett 显示特定几个，gainers 显示涨幅高的，tech 显示科技，crypto 显示加密
+            // 这里为了演示，根据 type 简单过滤，如果没有对应数据则显示全部
+            let filtered = stockData.filter(s => s.type === type);
+            if(type === 'gainers') filtered = stockData.sort((a,b) => b.change - a.change).slice(0, 5);
+            if(filtered.length === 0 && type !== 'gainers') filtered = stockData; // 兜底
+
+            filtered.forEach(item => {
+                const colorClass = item.change >= 0 ? 'up' : 'down';
+                const sign = item.change >= 0 ? '+' : '';
+                
+                const div = document.createElement('div');
+                div.className = 'stock-item';
+                div.onclick = () => openDetail(item);
+                div.innerHTML = `
+                    <div class="item-left">
+                        <div class="stock-logo">
+                            <img src="${item.icon}" style="width:100%; height:100%; object-fit:contain;">
+                            <img src="${ondoIcon}" class="ondo-badge">
+                        </div>
+                        <div class="stock-info">
+                            <h3>${item.sym} <span style="font-size:12px; color:#888;">@</span></h3>
+                            <p>${item.name} (Ondo Tokenized)</p>
+                        </div>
+                    </div>
+                    <div class="item-right">
+                        <span class="price">$${item.price.toFixed(2)}</span>
+                        <span class="change ${colorClass}">${sign}${item.change.toFixed(2)}%</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- 详情页逻辑 ---
+        function openDetail(item) {
+            currentSymbol = item.sym;
+            currentPrice = item.price;
+            currentItem = item;
+
+            // 1. 设置 UI
+            document.getElementById('listView').classList.remove('active');
+            document.getElementById('detailView').classList.add('active');
+            document.getElementById('mainNav').style.display = 'none'; // 隐藏底部导航
+
+            document.getElementById('detailTitle').innerText = `${item.name} (${item.sym})`;
+            document.getElementById('detailPrice').innerText = `$${item.price.toFixed(2)}`;
+            document.getElementById('tradeBtnSymbol').innerText = item.sym;
+
+            const sign = item.change >= 0 ? '+' : '';
+            const color = item.change >= 0 ? '#34c759' : '#ff3b30';
+            document.getElementById('detailChange').innerHTML = `<span style="color:${color}">${sign}${item.change.toFixed(2)}%</span>`;
+
+            // 2. 填充市场信息
+            updateMarketInfo(item);
+
+            // 3. 更新持币地址
+            updateHolders(item);
+
+            // 4. 更新仓位信息
+            updatePosition(item);
+
+            // 5. 延迟初始化图表（等待DOM渲染完成）
+            setTimeout(() => {
+                initChart(item.price);
+            }, 100);
+        }
+
+        function updateMarketInfo(item) {
+            // 模拟数据
+            const circulatingSupply = (Math.random() * 50 + 20).toFixed(2); // M
+            const marketCap = (circulatingSupply * item.price).toFixed(0);
+            const volume24h = (marketCap * (Math.random() * 0.05 + 0.02)).toFixed(0);
+            const high52 = (item.price * (Math.random() * 0.3 + 1.05)).toFixed(2);
+            const low52 = (item.price * (Math.random() * 0.3 + 0.7)).toFixed(2);
+
+            document.getElementById('volumeInfo').innerText = `$${volume24h}`;
+            document.getElementById('marketCapInfo').innerText = `$${marketCap}`;
+            document.getElementById('highInfo').innerText = `$${high52}`;
+            document.getElementById('lowInfo').innerText = `$${low52}`;
+        }
+
+        function updateHolders(item) {
+            const container = document.getElementById('holdersContainer');
+            container.innerHTML = '';
+
+            // 生成模拟持币地址（5个）
+            const holders = [];
+            for (let i = 0; i < 5; i++) {
+                const addr = '0x' + Math.random().toString(16).substring(2, 34).padEnd(40, '0');
+                const amount = (Math.random() * 1000 + 50).toFixed(2);
+                holders.push({ addr, amount });
+            }
+
+            // 按数量排序
+            holders.sort((a, b) => parseFloat(b.amount) - parseFloat(a.amount));
+
+            holders.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'holder-item';
+                div.innerHTML = `
+                    <div class="holder-addr">${h.addr}</div>
+                    <div class="holder-amount">${h.amount}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updatePosition(item) {
+            const amount = userPositions[item.sym] || 0;
+            const value = (amount * item.price).toFixed(2);
+            
+            document.getElementById('myPositionAmount').innerText = `${amount.toFixed(2)} ${item.sym}`;
+            document.getElementById('myPositionValue').innerText = `$${value}`;
+        }
+
+        function goBack(targetViewId) {
+            document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+            document.getElementById(targetViewId).classList.add('active');
+            
+            if(targetViewId === 'listView') {
+                document.getElementById('mainNav').style.display = 'flex';
+                if(chart) { chart.remove(); chart = null; } // 销毁图表节省资源
+            }
+        }
+
+        function switchKlineTab(el, interval) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            currentKlineTab = interval;
+            
+            // 重新绘制K线
+            if(currentPrice) {
+                try {
+                    initChart(currentPrice);
+                } catch(e) {
+                    console.error('更新K线失败:', e);
+                }
+            }
+        }
+
+        // --- K线图逻辑 (使用Canvas简单实现) ---
+        function initChart(basePrice) {
+            try {
+                const container = document.getElementById('kline');
+                if (!container) {
+                    console.error('K线容器不存在');
+                    return;
+                }
+                
+                // 清空容器
+                container.innerHTML = '';
+                
+                // 创建canvas
+                const canvas = document.createElement('canvas');
+                const width = container.offsetWidth || 400;
+                const height = 350;
+                
+                canvas.width = width * 2;  // 高DPI支持
+                canvas.height = height * 2;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                
+                container.appendChild(canvas);
+                
+                const ctx = canvas.getContext('2d');
+                ctx.scale(2, 2);  // 处理DPI
+                
+                // 生成数据
+                const data = generateData(basePrice, '1d');
+                console.log('K线数据:', data.length, '条');
+                
+                // 绘制K线
+                drawKline(ctx, data, width, height);
+                
+            } catch(e) {
+                console.error('K线图初始化失败:', e);
+                const container = document.getElementById('kline');
+                if (container) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">K线图: ' + e.message + '</div>';
+                }
+            }
+        }
+
+        function drawKline(ctx, data, width, height) {
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            if (data.length === 0) return;
+            
+            // 计算价格范围
+            let minPrice = Infinity, maxPrice = -Infinity;
+            data.forEach(d => {
+                minPrice = Math.min(minPrice, d.low);
+                maxPrice = Math.max(maxPrice, d.high);
+            });
+            
+            const priceRange = maxPrice - minPrice;
+            const priceScale = chartHeight / priceRange || 1;
+            
+            // 清空背景
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // 绘制网格
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            
+            // 水平线
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (chartHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // 垂直线
+            const barWidth = chartWidth / Math.max(data.length, 20);
+            for (let i = 0; i < Math.min(data.length, 10); i++) {
+                const x = padding + (chartWidth / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            // 绘制K线
+            const barSpacing = chartWidth / data.length;
+            data.forEach((candle, index) => {
+                const x = padding + barSpacing * index + barSpacing / 2;
+                
+                const openY = padding + chartHeight - (candle.open - minPrice) * priceScale;
+                const closeY = padding + chartHeight - (candle.close - minPrice) * priceScale;
+                const highY = padding + chartHeight - (candle.high - minPrice) * priceScale;
+                const lowY = padding + chartHeight - (candle.low - minPrice) * priceScale;
+                
+                // 绘制上下影线
+                ctx.strokeStyle = candle.close >= candle.open ? '#34c759' : '#ff3b30';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x, highY);
+                ctx.lineTo(x, lowY);
+                ctx.stroke();
+                
+                // 绘制实体
+                const bodyWidth = Math.max(barSpacing * 0.6, 2);
+                const bodyHeight = Math.abs(closeY - openY);
+                const bodyTop = Math.min(openY, closeY);
+                const bodyColor = candle.close >= candle.open ? '#34c759' : '#ff3b30';
+                
+                ctx.fillStyle = bodyColor;
+                ctx.fillRect(x - bodyWidth / 2, bodyTop, bodyWidth, Math.max(bodyHeight, 1));
+            });
+            
+            // 绘制坐标轴标签
+            ctx.fillStyle = '#333';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            
+            // 价格标签
+            for (let i = 0; i <= 5; i++) {
+                const price = minPrice + (priceRange / 5) * i;
+                const y = padding + (chartHeight / 5) * (5 - i);
+                ctx.textAlign = 'right';
+                ctx.fillText(price.toFixed(2), width - 10, y + 4);
+            }
+        }
+
+        function generateData(startPrice, interval = '1d') {
+            const res = [];
+            let now = Math.floor(Date.now() / 1000);
+            let time = now - (60 * 60 * 24 * 60); // 从60天前开始
+            let price = startPrice;
+            
+            let barCount = 60;
+            let timeStep = 86400; // 1天
+            
+            // 根据时间间隔调整生成的数据
+            if (interval === '1h') {
+                barCount = 168; // 显示168小时
+                timeStep = 3600; // 1小时
+                time = now - (60 * 60 * 168); // 168小时前
+            } else if (interval === '15m') {
+                barCount = 96; // 显示24小时
+                timeStep = 900; // 15分钟
+                time = now - (60 * 15 * 96); // 24小时前
+            } else if (interval === '5m') {
+                barCount = 144; // 显示12小时
+                timeStep = 300; // 5分钟
+                time = now - (60 * 5 * 144); // 12小时前
+            }
+            
+            const volatility = startPrice * 0.02; // 2% 波动率
+            
+            for (let i = 0; i < barCount; i++) {
+                const open = price;
+                const change = (Math.random() - 0.5) * volatility * 2;
+                const close = open + change;
+                const high = Math.max(open, close) + Math.abs(Math.random() * volatility * 0.5);
+                const low = Math.min(open, close) - Math.abs(Math.random() * volatility * 0.5);
+                
+                res.push({ 
+                    time: Math.floor(time + i * timeStep),
+                    open: Math.max(low, parseFloat((open).toFixed(2))),
+                    high: parseFloat((high).toFixed(2)),
+                    low: parseFloat((low).toFixed(2)),
+                    close: Math.max(low, Math.min(high, parseFloat((close).toFixed(2))))
+                });
+                price = close;
+            }
+            return res;
+        }
+
+        // --- 交易/兑换逻辑 ---
+        function goToSwap() {
+            // 模拟跳转到兑换页，并预填数据
+            document.getElementById('detailView').classList.remove('active');
+            document.getElementById('swapView').classList.add('active');
+
+            // 填充数据
+            const item = currentItem || stockData.find(s => s.sym === currentSymbol);
+            if (!item) return;
+            
+            document.getElementById('swapTokenSymbol').innerText = item.sym;
+            document.getElementById('swapTokenIcon').src = item.icon;
+            document.getElementById('swapRate').innerText = `1 ${item.sym} ≈ $${item.price.toFixed(2)}`;
+            
+            // 清空输入
+            document.getElementById('payAmount').value = '';
+            document.getElementById('receiveAmount').value = '';
+        }
+
+        function calculateSwap() {
+            const pay = parseFloat(document.getElementById('payAmount').value);
+            if(isNaN(pay) || pay <= 0) {
+                document.getElementById('receiveAmount').value = "";
+                return;
+            }
+            // 简单计算：数量 = 支付USDT / 单价
+            const amount = pay / currentPrice;
+            document.getElementById('receiveAmount').value = amount.toFixed(6);
+        }
+
+        function executeSwap() {
+            const pay = parseFloat(document.getElementById('payAmount').value);
+            if(!pay) return alert("请输入数量");
+
+            // 模拟 loading
+            const btn = document.querySelector('#swapView .btn-trade');
+            const originalText = btn.innerText;
+            btn.innerText = "兑换中...";
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                
+                // 成功提示
+                showToast(`兑换成功！获得 ${document.getElementById('receiveAmount').value} ${currentSymbol}`);
+                
+                // 更新余额 (模拟)
+                let bal = parseFloat(document.getElementById('usdtBalance').innerText);
+                document.getElementById('usdtBalance').innerText = (bal - pay).toFixed(2);
+                
+                // 2秒后返回列表或详情
+                setTimeout(() => {
+                    goBack('detailView');
+                }, 1500);
+
+            }, 1000);
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+        
+        function connectWallet() {
+            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
+        }
+
+    </script>
+</body>
+</html>
