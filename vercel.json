@@ -13,7 +13,17 @@
   "routes": [
     {
       "src": "/(.*)\\.html",
-      "dest": "/$1.html"
+      "dest": "/$1.html",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "src": "/wallet.js",
+      "dest": "/wallet.js",
+      "headers": {
+        "Cache-Control": "public, max-age=3600, must-revalidate"
+      }
     },
     {
       "src": "/",
@@ -23,5 +33,21 @@
       "src": "/api/(.*)",
       "dest": "/api/index.js"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
   ]
 }
+
