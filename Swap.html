@@ -467,6 +467,147 @@
         @keyframes fadeIn { from {opacity:0} to {opacity:1} }
         @keyframes slideUp { from {transform:translateY(100%)} to {transform:translateY(0)} }
 
+        /* ==================== 移动端响应式设计 ==================== */
+        @media (max-width: 768px) {
+            /* 流动性池控制栏响应式 */
+            .liquidity-controls {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch !important;
+            }
+
+            .liquidity-controls > div:first-child {
+                gap: 8px;
+            }
+
+            .liquidity-controls > div:nth-child(2) {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch !important;
+                justify-content: stretch !important;
+            }
+
+            .liquidity-controls > button {
+                width: 100%;
+            }
+
+            .liquidity-controls button {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .liquidity-controls input {
+                width: 100% !important;
+            }
+
+            .liquidity-controls label {
+                width: 100% !important;
+            }
+
+            /* 流动性池统计卡片响应式 */
+            .liquidity-stats {
+                grid-template-columns: 1fr !important;
+            }
+
+            .liquidity-stats > div {
+                padding: 16px !important;
+            }
+
+            .liquidity-stats > div div:first-child {
+                font-size: 11px !important;
+            }
+
+            .liquidity-stats > div div:nth-child(2) {
+                font-size: 18px !important;
+            }
+
+            /* 流动性池列表表头响应式 */
+            .liquidity-header {
+                grid-template-columns: 1.5fr 1fr 1fr !important;
+                gap: 8px !important;
+                font-size: 11px !important;
+                padding: 8px 0 !important;
+            }
+
+            .liquidity-header > div:nth-child(4),
+            .liquidity-header > div:nth-child(5) {
+                display: none;
+            }
+
+            /* 流动性池列表项响应式 */
+            .liquidity-item {
+                grid-template-columns: 1.5fr 1fr 1fr !important;
+                gap: 8px !important;
+                padding: 10px 0 !important;
+                font-size: 12px !important;
+            }
+
+            .liquidity-item > div:nth-child(1) {
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                min-width: 0;
+            }
+
+            .liquidity-item > div:nth-child(1) img:first-child {
+                width: 28px !important;
+                height: 28px !important;
+                flex-shrink: 0;
+            }
+
+            .liquidity-item > div:nth-child(1) div {
+                display: flex !important;
+                align-items: center !important;
+                gap: 3px !important;
+                overflow: hidden;
+                flex-wrap: wrap;
+                min-width: 0;
+            }
+
+            .liquidity-item > div:nth-child(1) span:nth-child(1) {
+                font-size: 12px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .liquidity-item > div:nth-child(1) span:nth-child(3) {
+                font-size: 12px !important;
+                white-space: nowrap;
+            }
+
+            .liquidity-item > div:nth-child(1) img:last-child {
+                width: 24px !important;
+                height: 24px !important;
+                margin-left: 0 !important;
+                flex-shrink: 0;
+            }
+
+            .liquidity-item > div:nth-child(1) span:nth-child(5) {
+                font-size: 9px !important;
+                padding: 1px 4px !important;
+                margin-left: 4px !important;
+                flex-shrink: 0;
+            }
+
+            /* 隐藏移动端不需要的列 */
+            .liquidity-item > div:nth-child(2),
+            .liquidity-item > div:nth-child(4),
+            .liquidity-item > div:nth-child(5) {
+                display: none;
+            }
+
+            /* 调整第三列（TVL）为可见 */
+            .liquidity-item > div:nth-child(3) {
+                display: block !important;
+                font-weight: 600 !important;
+                font-size: 12px !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -548,27 +689,25 @@
         <div class="buy-sell-container" id="liquidityMode">
             <div class="swap-card">
                 <!-- 统计数据 -->
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;" class="liquidity-stats">
                     <div style="background:linear-gradient(135deg, #ffdee9 0%, #fff 100%); border-radius:16px; padding:20px;">
                         <div style="font-size:12px; color:#999; margin-bottom:8px;">总交易量</div>
                         <div style="font-size:24px; font-weight:700; color:#000;">$923,376,028.06</div>
                         <div style="font-size:12px; color:#999; margin-top:8px;">
-                            <span style="display:inline-block; width:8px; height:8px; background:#8B5CF6; border-radius:2px; margin-right:4px;"></span>v2
-                            <span style="display:inline-block; width:8px; height:8px; background:#EC4899; border-radius:2px; margin-left:12px; margin-right:4px;"></span>v3
+                           
                         </div>
                     </div>
                     <div style="background:linear-gradient(135deg, #c2e9fb 0%, #fff 100%); border-radius:16px; padding:20px;">
                         <div style="font-size:12px; color:#999; margin-bottom:8px;">总锁仓量</div>
                         <div style="font-size:24px; font-weight:700; color:#000;">$4,881,762.67</div>
                         <div style="font-size:12px; color:#999; margin-top:8px;">
-                            <span style="display:inline-block; width:8px; height:8px; background:#8B5CF6; border-radius:2px; margin-right:4px;"></span>v2
-                            <span style="display:inline-block; width:8px; height:8px; background:#EC4899; border-radius:2px; margin-left:12px; margin-right:4px;"></span>v3
+                 
                         </div>
                     </div>
                 </div>
 
                 <!-- 控制栏 -->
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;" class="liquidity-controls">
                     <div style="display:flex; gap:10px;">
                         <button id="v2Btn" onclick="switchLiquidityVersion('v2')" style="padding:8px 16px; background:#000; color:white; border:none; border-radius:20px; font-weight:600; cursor:pointer;">V2</button>
                         <button id="v3Btn" onclick="switchLiquidityVersion('v3')" style="padding:8px 16px; background:white; color:#000; border:1px solid #e0e0e0; border-radius:20px; font-weight:600; cursor:pointer;">V3</button>
@@ -584,7 +723,7 @@
                 </div>
 
                 <!-- 列表头 -->
-                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; padding:10px 0; border-bottom:1px solid #e0e0e0; font-size:12px; color:#999; font-weight:600;">
+                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; padding:10px 0; border-bottom:1px solid #e0e0e0; font-size:12px; color:#999; font-weight:600;" class="liquidity-header">
                     <div>流动性池</div>
                     <div>合约</div>
                     <div>TVL</div>
@@ -1602,7 +1741,7 @@
             }
 
             container.innerHTML = pools.map(pool => `
-                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px;">
+                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px;" class="liquidity-item">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <img src="${pool.token1.icon}" style="width:32px; height:32px; border-radius:50%;">
                         <div style="display:flex; align-items:center; gap:4px; font-weight:600;">
