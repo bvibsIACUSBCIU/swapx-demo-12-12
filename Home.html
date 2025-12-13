@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Crypto Wallet Home</title>
+    <!-- 引入必要的第三方库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* --- 保持所有原有样式不变 --- */
         :root {
             --bg-color: #ffffff;
             --card-white: #ee1d1d;
@@ -25,37 +27,29 @@
             --nav-height: 80px;
         }
 
-        /* 钱包按钮 - 左上角放置，与兑换按钮风格一致 */
+        /* 连接钱包渐变按钮 */
         .connect-wallet-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 12px 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            transition: transform 0.2s;
         }
         
         .connect-wallet-btn:active {
             transform: scale(0.95);
         }
         
-        .connect-wallet-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-        }
-        
         .connect-wallet-btn i {
-            font-size: 16px;
+            font-size: 13px;
         }
 
         * {
@@ -571,6 +565,7 @@
     <div id="view-home" class="view-container active">
         <div class="header">
             <button class="connect-wallet-btn" onclick="openModal('walletActionModal')">
+                <span class="status-dot" id="walletStatusDot"></span>
                 <i class="fas fa-wallet"></i>
                 <span id="walletBtnText">连接钱包</span>
             </button>
@@ -807,20 +802,26 @@
     <div class="modal-overlay" id="walletConnectModal" onclick="closeModal(event, 'walletConnectModal')">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-title">选择钱包 <span class="close-modal" onclick="closeThisModal('walletConnectModal')">&times;</span></div>
-            <div class="option-item" onclick="connectMetamask()">
+            
+            <!-- 调用 WalletManager.connectMetamask() -->
+            <div class="option-item" onclick="WalletManager.connectMetamask()">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="Metamask">
                 <span>MetaMask</span>
             </div>
-            <div class="option-item" onclick="connectBitgetWallet()">
+            
+            <!-- 调用 WalletManager.connectBitget() -->
+            <div class="option-item" onclick="WalletManager.connectBitget()">
                 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAgVBMVEUA8P////8AAAAA7/8A8/8A9/8AiYwAiI8A9f8AX2R19P8A6vb3/v8A6/kALzMAydTs/f8A5PIAT1QAKSlH8v+x+f+F9v/j/f8AHiEAFxgASk6Y9//O+/+5+f9Z8/+m+P8AO0AAIyIAIRwA1uEApKsAQkYANjcAVlsAm6EAsrvZ/P83Q69tAAACWUlEQVRIiZWWC3ObMAyAxeyu1EBKG4es5dXuQbb8/x84Y2MZGYukuutdyvnLp8jCFmSJKLtRabCh1diVqTWwfXQahIAQ5p+hvw3WilAIN7GWgmWToBa22QFPLDaT0HHgsMfNqEqC9T5lSV1vwTPRyQcMitYxSLn85RFDUmtNwTri3r75eIlAURIQKPfDY8ci4kwvrcGB8R22nK8tbPZv3zeTnQdLyqHvI8mZ8GCzeiaDbwKGE60D1zshK+Q+KoZzlQUiXPneJctZpQGDUBaB4/L0vxJWJZXFp+ded3xgCwthD2V1vCdPGyoD3AtZ/fTc5RZncoXOg8G35JmnXxCX6xnGBZS/Ql/n9sHv7z62hRI9KPyJr9hpbgeraadUDWj8LN9pb8viD18stfosg/PTkRDIOFsNhAzOyjkn3knJ2CmQnPjWpaR3Hu5o+nnhwwVr65wVkhP3ei5oIBfnkSbhYoAhJoPT78qBfpUNRTbERY7k25JtcOKiFhIXTY699tc1bYHd+C93S0zLXRM3DXZ3HiWPx7OoIdty8dc8Ife8CEGsX2SOC75nfMEaA/b7t+Lah5y4zofV133usCLn8V0+ECcLlnyueZKzd8D813Ikk+csdLfVl/JcbkgLdkkl45tLiherSrUP47N3FV7lessxPhjIDLCprOQ4HY0r0XgkHy9PLi6U80NHGJAiMpz/5LzQOESGkazUN0Y5oxtwNRkC+Zlz4dosDWYd7KBCXzMOzLIxNR9bDE50ZTxal2PKusGSw3ynYO0VZiA/b1clQBN13yp7pAyq7evkkv/22h/zGqVCbgAAAABJRU5ErkJggg==" alt="Bitget">
                 <span>Bitget Wallet</span>
             </div>
-            <div class="option-item" onclick="mockConnect('TokenPocket')">
+            
+            <!-- 调用 WalletManager.mockConnect() -->
+            <div class="option-item" onclick="WalletManager.mockConnect('OKX Wallet')">
                 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJDSURBVHgB7Zq9jtpAEMfHlhEgQLiioXEkoAGECwoKxMcTRHmC5E3IoyRPkPAEkI7unJYmTgEFTYwA8a3NTKScLnCHN6c9r1e3P2llWQy7M/s1Gv1twCP0ej37dDq9x+Zut1t3t9vZjDEHIiSRSPg4ZpDL5fxkMvn1cDh8m0wmfugfO53OoFQq/crn8wxfY9EymQyrVCqMfHvScZx1p9ls3pFxXBy/bKlUipGPrVbLuQqAfsCliq3zl0H84zwtjQrOw4Mt1W63P5LvBm2d+Xz+YzqdgkqUy+WgWCy+Mc/nc282m4FqLBYL+3g8fjDxenq72WxANZbLJeA13zDX67UDioL5ybXwafMYu64Ltn3bdDweQ5R97fd7GyhBQMipx4POeEDHIu2LfDdBIGGz+hJ9CQ1ABjoA2egAZPM6AgiCAEQhsi/C4jHyPA/6/f5NG3Ks2+3CYDC4aTccDrn6ojG54MnEvG00GoVmWLIRNZ7wTCwDHYBsdACy0QHIhiuRETxlICWpMMhGZHmqS8qH6JLyGegAZKMDkI0uKf8X4SWlaZo+Pp1bRrwlJU8ZKLIvUjKh0WiQ3sRUbNVq9c5Ebew7KEo2m/1p4jJ4qAmDaqDQBzj5XyiAT4VCQezJigAU+IDU+z8vJFnGWeC+bKQV/5VZ71FV6L7PA3gg3tXrdQ+DgLhC+75Wq3no69P3MC0NFQpx2lL04Ql9gHK1bRDjsSBIvScBnDTk1WrlGIZBorIDEYJj+rhdgnQ67VmWRe0zlplXl81vcyEt0rSoYDUAAAAASUVORK5CYII=" alt="TP">
                 <span>OKX Wallet</span>
             </div>
-             <div class="option-item" onclick="mockConnect('WalletConnect')">
-                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU3MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
+             <div class="option-item" onclick="WalletManager.mockConnect('TokenPocket')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU7MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
                 <span>TokenPocket</span>
             </div>
 
@@ -843,10 +844,19 @@
         </div>
     </div>
 
+    <!-- 引入独立出来的钱包逻辑脚本 -->
+    <script src="wallet.js"></script>
+
     <script>
         // --- 模拟数据 ---
         const chains = [
-            "Ethereum", "BNB Chain", "Polygon", "Solana", "Arbitrum", "Optimism", "Xone Mainnet"
+            { id: 'eth', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            { id: 'bsc', name: 'BNB Chain', icon: 'https://cryptologos.cc/logos/bnb-bnb-logo.png' },
+            { id: 'poly', name: 'Polygon', icon: 'https://cryptologos.cc/logos/polygon-matic-logo.png' },
+            { id: 'sol', name: 'Solana', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
+            { id: 'arb', name: 'Arbitrum', icon: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png' },
+            { id: 'opt', name: 'Optimism', icon: 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png' },
+            { id: 'xone', name: 'Xone Mainnet', icon: 'https://ui-avatars.com/api/?name=Xone&background=D9836D&color=fff&size=128&bold=true' }
         ];
 
         const tokens = [
@@ -867,7 +877,7 @@
 
         // --- 全局状态 ---
         let currentTab = 'token';
-        let currentChain = 'Ethereum';
+        let currentChain = { id: 'eth', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' };
         let currentToken = null; // 用户在详情页或转账页选中的 Token
 
         // --- 初始化 ---
@@ -888,7 +898,6 @@
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-            // 简单匹配：第1个是token, 2是nft, 3是card
             const index = tab === 'token' ? 0 : tab === 'nft' ? 1 : 2;
             document.querySelectorAll('.tab-item')[index].classList.add('active');
             renderList();
@@ -939,9 +948,9 @@
             let html = '';
             chains.forEach(chain => {
                 html += `
-                <div class="option-item" onclick="selectChain('${chain}')">
-                    <i class="fas fa-globe"></i>
-                    <span>${chain}</span>
+                <div class="option-item" onclick="selectChain('${chain.id}', '${chain.name}')">
+                    <img src="${chain.icon}" alt="${chain.name}" onerror="this.src='https://via.placeholder.com/24'">
+                    <span>${chain.name}</span>
                 </div>`;
             });
             container.innerHTML = html;
@@ -980,22 +989,18 @@
             showView('view-token-detail');
         }
 
-        // 2. 进入收款页 (可从首页或详情页进入)
+        // 2. 进入收款页
         function navigateToReceive(fromDetail = false) {
-            // 如果从详情页进入，虽然 UI 不一定变，但逻辑上我们知道是哪个币
-            // 更新 UI 链名称
-            document.getElementById('receiveChainBadge').innerText = currentChain;
-            document.getElementById('receiveChainName').innerText = currentChain;
+            document.getElementById('receiveChainBadge').innerText = currentChain.name;
+            document.getElementById('receiveChainName').innerText = currentChain.name;
             showView('view-receive');
         }
 
-        // 3. 进入转账页 (可从首页或详情页进入)
+        // 3. 进入转账页
         function navigateToTransfer(fromDetail = false) {
             if (fromDetail && currentToken) {
-                // 如果是从详情页来，预填代币
                 setTransferToken(currentToken);
             } else {
-                // 如果是从首页来，重置或保持默认
                 resetTransferForm();
             }
             showView('view-transfer');
@@ -1003,18 +1008,6 @@
 
         // 4. 返回逻辑
         function goBackFromReceive() {
-            // 简单处理：如果有 currentToken 且刚才在详情页，理论上应回详情页
-            // 这里为了简化，我们判断：如果有 currentToken，回详情页，否则回首页
-            // 但用户可能直接点击首页的收款。
-            // 更好的做法是记录 history stack，这里简化为：
-            // 如果 currentToken 不为空，且我们认为这是详情流，回详情。
-            // 实际上用户体验：如果是点击首页收款 -> back -> home.
-            // 如果点击详情页收款 -> back -> detail.
-            // 我们可以检查当前是否处于 detail 视图来决定(但现在已经跳走了)。
-            // 简单方案：总是回 Home，或者根据上一个 active view。
-            // 这里我们简化：如果currentToken被设置了，大概率是从那来的，但也不一定。
-            // 最稳妥：总是回 Home，除非我们做复杂路由。
-            // 为了体验好一点：
             showView('view-home'); 
         }
 
@@ -1044,12 +1037,15 @@
             currentToken = null;
         }
 
-        function selectChain(chainName) {
-            currentChain = chainName;
-            document.getElementById('currentChain').innerText = chainName; // Home页
-            document.getElementById('receiveChainBadge').innerText = chainName; // Receive页
-            document.getElementById('receiveChainName').innerText = chainName;
-            closeThisModal('chainModal');
+        function selectChain(chainId, chainName) {
+            const chain = chains.find(c => c.id === chainId);
+            if (chain) {
+                currentChain = chain;
+                document.getElementById('currentChain').innerText = chain.name; // Home页
+                document.getElementById('receiveChainBadge').innerText = chain.name; // Receive页
+                document.getElementById('receiveChainName').innerText = chain.name;
+                closeThisModal('chainModal');
+            }
         }
 
         function copyText(text) {
@@ -1069,211 +1065,10 @@
             document.getElementById(id).style.display = 'none';
         }
 
-        // --- Bitget Wallet 检测诊断 ---
-        function debugBitgetWallet() {
-            console.clear();
-            console.log("=== Bitget Wallet 检测诊断 ===");
-            console.log("window.bitget:", window.bitget);
-            console.log("window.bitgetWallet:", window.bitgetWallet);
-            console.log("window.ethereum:", window.ethereum);
-            console.log("window.BG:", window.BG);
-            
-            if (window.ethereum) {
-                console.log("--- window.ethereum 详细信息 ---");
-                console.log("ethereum.isBitget:", window.ethereum.isBitget);
-                console.log("ethereum.name:", window.ethereum.name);
-                console.log("ethereum.isConnected:", window.ethereum.isConnected);
-                console.log("ethereum.request:", typeof window.ethereum.request);
-            }
-            
-            // 检测所有可能的提供者
-            let detectedProviders = [];
-            if (window.bitget) detectedProviders.push("window.bitget");
-            if (window.bitgetWallet) detectedProviders.push("window.bitgetWallet");
-            if (window.ethereum && window.ethereum.isBitget) detectedProviders.push("window.ethereum (isBitget=true)");
-            if (window.ethereum && window.ethereum.name && window.ethereum.name.includes('bitget')) detectedProviders.push("window.ethereum (name包含bitget)");
-            if (window.ethereum && !window.ethereum.isBitget && !window.ethereum.isMetaMask) detectedProviders.push("window.ethereum (其他提供者)");
-            if (window.BG) detectedProviders.push("window.BG");
-            
-            console.log("=== 检测到的提供者 ===");
-            if (detectedProviders.length > 0) {
-                detectedProviders.forEach(p => console.log("✓", p));
-            } else {
-                console.warn("未检测到任何 Bitget Wallet 提供者");
-            }
-            
-            alert("已在浏览器控制台输出诊断信息，请按 F12 打开开发者工具查看详细信息");
-        }
-
-        // --- 钱包连接逻辑 ---
-        async function connectMetamask() {
-            if (typeof window.ethereum !== 'undefined') {
-                try {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    const account = accounts[0];
-                    const shortAddr = account.substring(0, 6) + "..." + account.substring(account.length - 4);
-                    
-                    document.getElementById('userAddress').innerText = shortAddr;
-                    document.getElementById('receiveAddress').innerText = account; // 更新收款地址
-                    document.getElementById('walletBtnText').innerText = "MetaMask";
-                    document.getElementById('walletStatusDot').classList.add('connected');
-                    
-                    generateQRCode(account); // 更新二维码
-
-                    closeThisModal('walletConnectModal');
-                } catch (error) {
-                    alert("连接失败");
-                }
-            } else {
-                alert("请安装 MetaMask");
-            }
-        }
-
-        async function connectBitgetWallet() {
-            // Bitget Wallet 的真实链接实现
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                // 移动端：打开 Bitget Wallet APP
-                // 使用深链接 (Deep Link) 唤起 Bitget Wallet APP
-                const bitgetDeepLink = "bitget://wallet";
-                window.location.href = bitgetDeepLink;
-                
-                // 如果 3 秒后仍未打开 APP，则提示用户
-                setTimeout(() => {
-                    alert("未检测到 Bitget Wallet APP，请先安装");
-                }, 3000);
-            } else {
-                // 网页端：打开 Bitget Wallet 浏览器扩展程序
-                // 等待 Bitget Wallet 扩展初始化（通常需要一点延迟）
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                let bitgetProvider = null;
-                
-                console.log("开始检测 Bitget Wallet 提供者...");
-                console.log("window.bitget:", window.bitget);
-                console.log("window.bitgetWallet:", window.bitgetWallet);
-                console.log("window.ethereum:", window.ethereum);
-                console.log("window.BG:", window.BG);
-                
-                // 优先级1: 检查 window.bitget（Bitget 最常用的标识）
-                if (window.bitget && typeof window.bitget.request === 'function') {
-                    console.log("✓ 检测到 window.bitget");
-                    bitgetProvider = window.bitget;
-                }
-                // 优先级2: 检查 window.bitgetWallet
-                else if (window.bitgetWallet && typeof window.bitgetWallet.request === 'function') {
-                    console.log("✓ 检测到 window.bitgetWallet");
-                    bitgetProvider = window.bitgetWallet;
-                }
-                // 优先级3: 检查 window.BG
-                else if (window.BG && typeof window.BG.request === 'function') {
-                    console.log("✓ 检测到 window.BG");
-                    bitgetProvider = window.BG;
-                }
-                // 优先级4: 检查 window.ethereum.isBitget（确保是 Bitget，而不是 MetaMask）
-                else if (window.ethereum && window.ethereum.isBitget === true && typeof window.ethereum.request === 'function') {
-                    console.log("✓ 检测到 window.ethereum.isBitget");
-                    bitgetProvider = window.ethereum;
-                }
-                // 优先级5: 检查 window.ethereum 的 name 属性是否包含 'bitget'
-                else if (window.ethereum && window.ethereum.name && window.ethereum.name.toLowerCase().includes('bitget') && typeof window.ethereum.request === 'function') {
-                    console.log("✓ 检测到 window.ethereum (name包含bitget)");
-                    bitgetProvider = window.ethereum;
-                }
-                // 其他情况：不能自动识别为 Bitget
-                else {
-                    console.warn("✗ 未检测到 Bitget Wallet 提供者");
-                    console.log("检查到的提供者信息:");
-                    if (window.ethereum) {
-                        console.log("  - ethereum.isBitget:", window.ethereum.isBitget);
-                        console.log("  - ethereum.isMetaMask:", window.ethereum.isMetaMask);
-                        console.log("  - ethereum.name:", window.ethereum.name);
-                    }
-                }
-                
-                if (bitgetProvider && typeof bitgetProvider.request === 'function') {
-                    // Bitget Wallet 扩展已安装，可以直接调用
-                    try {
-                        console.log("正在请求 Bitget Wallet 账户授权...");
-                        const accounts = await bitgetProvider.request({ method: 'eth_requestAccounts' });
-                        if (accounts && accounts.length > 0) {
-                            const account = accounts[0];
-                            const shortAddr = account.substring(0, 6) + "..." + account.substring(account.length - 4);
-                            
-                            console.log("✓ Bitget Wallet 连接成功，账户:", account);
-                            
-                            document.getElementById('userAddress').innerText = shortAddr;
-                            document.getElementById('receiveAddress').innerText = account;
-                            document.getElementById('walletBtnText').innerText = "Bitget Wallet";
-                            document.getElementById('walletStatusDot').classList.add('connected');
-                            
-                            generateQRCode(account);
-                            
-                            // 读取钱包内代币数据
-                            fetchBitgetTokenData(account);
-                            
-                            closeThisModal('walletConnectModal');
-                        }
-                    } catch (error) {
-                        console.error("Bitget Wallet 连接失败:", error);
-                        alert("Bitget Wallet 连接失败: " + (error.message || '用户拒绝授权或钱包操作异常'));
-                    }
-                } else {
-                    // 扩展未安装，引导用户安装
-                    console.warn("未检测到 Bitget Wallet，无法连接");
-                    const installChoice = confirm("未检测到 Bitget Wallet 浏览器扩展\n\n点击 '确定' 打开官网下载安装\n点击 '取消' 继续使用其他钱包");
-                    if (installChoice) {
-                        window.open("https://www.bitget.com/wallet", "_blank");
-                    }
-                    closeThisModal('walletConnectModal');
-                }
-            }
-        }
-
-        // 读取 Bitget Wallet 的代币数据
-        async function fetchBitgetTokenData(account) {
-            console.log("正在读取 Bitget Wallet 账户的代币数据: " + account);
-            
-            try {
-                // 获取以太坊余额
-                const bitgetProvider = window.bitget || window.bitgetWallet || window.ethereum;
-                if (!bitgetProvider) return;
-                
-                // 获取 ETH 余额
-                const ethBalance = await bitgetProvider.request({
-                    method: 'eth_getBalance',
-                    params: [account, 'latest']
-                });
-                
-                const balanceInEth = parseInt(ethBalance, 16) / 1e18;
-                console.log("ETH 余额: " + balanceInEth);
-                
-                // 这里可以进一步调用 Etherscan API、Moralis API 或 Infura 来获取 ERC-20 代币
-                // 示例代码：
-                // const response = await fetch(`https://api.etherscan.io/api?module=account&action=tokenlist&address=${account}&apikey=YOUR_API_KEY`);
-                // const data = await response.json();
-                
-                // 更新总余额显示（实际环境需要计算所有代币的 USD 价值）
-                document.getElementById('totalBalance').innerText = "$" + (balanceInEth * 2500).toFixed(2); // 假设 ETH 价格为 $2500
-            } catch (error) {
-                console.error("读取代币数据失败:", error);
-            }
-        }
-
-        function mockConnect(name) {
-            document.getElementById('walletBtnText').innerText = name;
-            document.getElementById('walletStatusDot').classList.add('connected');
-            closeThisModal('walletConnectModal');
-            alert(name + " 连接成功");
-        }
-
-        function connectWallet() {
-            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
-        }
-
-        function generateQRCode(text) {
+        // 供 wallet.js 调用的全局二维码生成函数
+        window.generateQRCode = function(text) {
             const container = document.getElementById("qrcode");
+            if (!container) return;
             container.innerHTML = "";
             new QRCode(container, {
                 text: text,
@@ -1283,30 +1078,6 @@
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
-        }
-
-        // 页面加载完成后，自动检测 Bitget Wallet
-        window.addEventListener('load', function() {
-            console.log("页面已加载，开始检测 Bitget Wallet...");
-            // 多次检测，因为某些扩展可能需要时间初始化
-            setTimeout(checkBitgetWallet, 500);
-            setTimeout(checkBitgetWallet, 1000);
-            setTimeout(checkBitgetWallet, 2000);
-        });
-
-        function checkBitgetWallet() {
-            const hasBitget = window.bitget || window.bitgetWallet || (window.ethereum && window.ethereum.isBitget) || window.BG;
-            if (hasBitget) {
-                console.log("✓ 检测到 Bitget Wallet 提供者");
-            } else {
-                console.warn("✗ 未检测到 Bitget Wallet 提供者，但 window.ethereum 已就绪");
-                console.log("当前提供者信息:", {
-                    hasEthereum: !!window.ethereum,
-                    ethereumName: window.ethereum?.name,
-                    ethereumIsBitget: window.ethereum?.isBitget,
-                    isMetaMask: window.ethereum?.isMetaMask
-                });
-            }
         }
     </script>
 </body>

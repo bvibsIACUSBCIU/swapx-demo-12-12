@@ -54,39 +54,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 钱包按钮 - 左上角放置，与兑换按钮风格一致 */
-        .connect-wallet-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 12px 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .connect-wallet-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .connect-wallet-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-        }
-        
-        .connect-wallet-btn i {
-            font-size: 16px;
-        }
-
         /* --- 列表页 UI --- */
         .header {
             padding: 50px 20px 10px; /* 适配全面屏顶部 */
@@ -419,6 +386,47 @@
             color: var(--text-sub);
         }
 
+        /* 股票列表下拉菜单样式 */
+        .token-dropdown {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .token-dropdown-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        .token-dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .token-dropdown-item:hover {
+            background: #f9f9f9;
+        }
+        .token-dropdown-item img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .token-dropdown-item-text {
+            flex: 1;
+        }
+        .token-dropdown-item-symbol {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .token-dropdown-item-name {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
         /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
@@ -464,10 +472,6 @@
 
     <div id="listView" class="page-view active">
         <div class="header">
-            <button class="connect-wallet-btn" onclick="connectWallet()">
-                <i class="fas fa-wallet"></i>
-                <span>连接钱包</span>
-            </button>
             <div class="page-title">
                 股票代币 
                 <i class="fas fa-chart-line" style="color: #FF9500; font-size: 24px;"></i>
@@ -571,34 +575,72 @@
         </div>
 
         <div class="swap-card">
-            <div style="margin-bottom: 10px; font-size:12px; color:#888;">从</div>
-            <div class="input-group">
-                <input type="number" id="payAmount" placeholder="0.00" oninput="calculateSwap()">
-                <div class="token-badge">
-                    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="20"> USDT
+            <!-- "从" 部分 -->
+            <div style="margin-bottom: 10px; font-size:12px; color:#888;" id="fromLabel">从</div>
+            <div class="input-group" style="justify-content: space-between;">
+                <input type="number" id="payAmount" placeholder="0.00" oninput="calculateSwap()" style="width: 50%;">
+                <div class="token-badge" id="fromTokenBadge" style="cursor: pointer; user-select: none;" onclick="toggleFromToken(event)">
+                    <img id="fromTokenIcon" src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="20"> 
+                    <span id="fromTokenSymbol">USDT</span>
+                    <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px; display: none;" id="fromChevron"></i>
+                </div>
+                <!-- 从代币选择下拉菜单 -->
+                <div id="fromTokenDropdown" class="token-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #eee; border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 300; min-width: 200px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                 </div>
             </div>
             <div style="text-align: right; font-size: 12px; color: #888; margin-bottom: 15px;">
-                余额: <span id="usdtBalance">1000.00</span>
+                余额: <span id="fromBalance">1000.00</span>
             </div>
 
-            <div class="swap-arrow"><i class="fas fa-arrow-down"></i></div>
+            <!-- 交换箭头 -->
+            <div class="swap-arrow" style="position: relative;">
+                <i class="fas fa-arrow-down" style="cursor: pointer; transition: transform 0.3s; user-select: none;" onclick="toggleSwapMode()" id="swapArrowBtn" title="点击切换买卖方向"></i>
+            </div>
 
-            <div style="margin-bottom: 10px; font-size:12px; color:#888;">到</div>
-            <div class="input-group">
-                <input type="text" id="receiveAmount" readonly placeholder="0.00">
-                <div class="token-badge">
-                    <img id="swapTokenIcon" src="" width="20"> 
-                    <span id="swapTokenSymbol">TOKEN</span>
+            <!-- "到" 部分 -->
+            <div style="margin-bottom: 10px; font-size:12px; color:#888;" id="toLabel">到</div>
+            <div class="input-group" style="position: relative;">
+                <input type="text" id="receiveAmount" readonly placeholder="0.00" style="width: 50%;">
+                <div class="token-badge" id="toTokenBadge" style="cursor: pointer; user-select: none; position: relative;" onclick="toggleToTokenDropdown(event)">
+                    <img id="toTokenIcon" src="" width="20" style="border-radius: 50%;"> 
+                    <span id="toTokenSymbol">TOKEN</span>
+                    <i class="fas fa-chevron-down" style="font-size: 10px; margin-left: 5px;" id="toChevron"></i>
+                </div>
+                <!-- "到"代币列表下拉菜单 -->
+                <div id="toTokenDropdown" class="token-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #eee; border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 300; min-width: 200px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: #888; margin-bottom: 15px;">
+                可用: <span id="toBalance">0.00</span>
+            </div>
+
+            <!-- 详细信息部分 -->
+            <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                <div style="font-size: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
+                        <span style="color: #888;">路径</span>
+                        <span style="color: #1d1d1f; font-weight: 600;">1inch Fusion</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
+                        <span style="color: #888;">兑换率</span>
+                        <span id="swapRate" style="color: #1d1d1f; font-weight: 600;">1 Token ≈ $--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
+                        <span style="color: #888;">滑点</span>
+                        <span style="color: #1d1d1f; font-weight: 600;">自动 | 1%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
+                        <span style="color: #888;">最低收款金额</span>
+                        <span id="minReceive" style="color: #1d1d1f; font-weight: 600;">0 TOKEN</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #888;">服务费</span>
+                        <span style="color: #34c759; font-weight: 600;">0.5% <span style="color: #888;">免费</span></span>
+                    </div>
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; font-size:12px; color:#888; margin-top:15px;">
-                <span>汇率</span>
-                <span id="swapRate">1 Token ≈ $--</span>
-            </div>
-
-            <button class="btn btn-trade" style="margin-top: 25px; width: 100%;" onclick="executeSwap()">
+            <button class="btn btn-trade" style="margin-top: 25px; width: 100%;" onclick="executeSwap()" id="swapBtn">
                 确认兑换
             </button>
         </div>
@@ -686,9 +728,27 @@
             "AAPLon": 30.50
         };
 
+        // 交换模式：buy（买入USDT兑换代币） 或 sell（卖出代币换USDT）
+        let swapMode = 'buy';
+
         // --- 初始化 ---
         window.onload = function() {
             renderList('buffett'); // 默认显示巴菲特持仓
+            
+            // 点击页面其他地方关闭下拉菜单
+            document.addEventListener('click', function(event) {
+                const fromDropdown = document.getElementById('fromTokenDropdown');
+                const toDropdown = document.getElementById('toTokenDropdown');
+                const fromBadge = event.target.closest('#fromTokenBadge');
+                const toBadge = event.target.closest('#toTokenBadge');
+                
+                if (!fromBadge && fromDropdown) {
+                    fromDropdown.style.display = 'none';
+                }
+                if (!toBadge && toDropdown) {
+                    toDropdown.style.display = 'none';
+                }
+            });
         };
 
         // --- 渲染列表 ---
@@ -1022,38 +1082,235 @@
             document.getElementById('detailView').classList.remove('active');
             document.getElementById('swapView').classList.add('active');
 
+            // 默认为买入模式
+            swapMode = 'buy';
+
             // 填充数据
             const item = currentItem || stockData.find(s => s.sym === currentSymbol);
             if (!item) return;
             
-            document.getElementById('swapTokenSymbol').innerText = item.sym;
-            document.getElementById('swapTokenIcon').src = item.icon;
+            // 初始化为买入模式：USDT -> 代币
+            document.getElementById('fromTokenSymbol').innerText = 'USDT';
+            document.getElementById('fromTokenIcon').src = 'https://cryptologos.cc/logos/tether-usdt-logo.png';
+            document.getElementById('fromBalance').innerText = '1000.00';
+            document.getElementById('fromChevron').style.display = 'none';
+            
+            document.getElementById('toTokenSymbol').innerText = item.sym;
+            document.getElementById('toTokenIcon').src = item.icon;
+            document.getElementById('toChevron').style.display = 'block';
             document.getElementById('swapRate').innerText = `1 ${item.sym} ≈ $${item.price.toFixed(2)}`;
             
             // 清空输入
             document.getElementById('payAmount').value = '';
             document.getElementById('receiveAmount').value = '';
+            
+            // 初始化代币下拉菜单
+            renderTokenDropdown('to');
+            
+            // 更新按钮文本
+            document.getElementById('swapBtn').innerText = '确认买入';
+            
+            // 更新详细信息
+            updateSwapDetails(item);
+        }
+
+        function renderTokenDropdown(type = 'to') {
+            const dropdown = type === 'to' ? 
+                document.getElementById('toTokenDropdown') : 
+                document.getElementById('fromTokenDropdown');
+            
+            dropdown.innerHTML = '';
+            
+            // 获取要显示的代币列表
+            let tokens = [];
+            if (type === 'to') {
+                // 卖出时显示持仓的代币
+                tokens = stockData.filter(t => userPositions[t.sym]);
+                // 买入时显示所有代币
+                if (swapMode === 'buy') {
+                    tokens = stockData.slice(0, 15);
+                }
+            } else {
+                // 从USDT切换到代币时，显示持仓代币
+                tokens = stockData.filter(t => userPositions[t.sym]);
+            }
+            
+            tokens.forEach(token => {
+                const div = document.createElement('div');
+                div.className = 'token-dropdown-item';
+                div.onclick = () => selectToken(token, type);
+                div.innerHTML = `
+                    <img src="${token.icon}" alt="${token.sym}">
+                    <div class="token-dropdown-item-text">
+                        <div class="token-dropdown-item-symbol">${token.sym}</div>
+                        <div class="token-dropdown-item-name">${token.name}</div>
+                    </div>
+                    <div style="color: #34c759; font-weight: 600; font-size: 12px;">$${token.price.toFixed(2)}</div>
+                `;
+                dropdown.appendChild(div);
+            });
+        }
+
+        function toggleFromToken(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('fromTokenDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleToTokenDropdown(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('toTokenDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function toggleSwapMode() {
+            // 切换买卖模式
+            swapMode = swapMode === 'buy' ? 'sell' : 'buy';
+            
+            const arrowBtn = document.getElementById('swapArrowBtn');
+            arrowBtn.style.transform = arrowBtn.style.transform === 'rotate(180deg)' ? 'rotate(0deg)' : 'rotate(180deg)';
+            
+            if (swapMode === 'buy') {
+                // 买入模式：USDT -> 代币
+                document.getElementById('fromLabel').innerText = '从';
+                document.getElementById('toLabel').innerText = '到';
+                document.getElementById('fromTokenSymbol').innerText = 'USDT';
+                document.getElementById('fromTokenIcon').src = 'https://cryptologos.cc/logos/tether-usdt-logo.png';
+                document.getElementById('fromBalance').innerText = '1000.00';
+                document.getElementById('fromChevron').style.display = 'none';
+                document.getElementById('toChevron').style.display = 'block';
+                document.getElementById('swapBtn').innerText = '确认买入';
+                
+                // 重新渲染"到"的代币列表（显示所有代币）
+                renderTokenDropdown('to');
+            } else {
+                // 卖出模式：代币 -> USDT
+                document.getElementById('fromLabel').innerText = '卖出';
+                document.getElementById('toLabel').innerText = '换取';
+                document.getElementById('toTokenSymbol').innerText = 'USDT';
+                document.getElementById('toTokenIcon').src = 'https://cryptologos.cc/logos/tether-usdt-logo.png';
+                document.getElementById('toBalance').innerText = '1000000.00';
+                document.getElementById('fromChevron').style.display = 'block';
+                document.getElementById('toChevron').style.display = 'none';
+                document.getElementById('swapBtn').innerText = '确认卖出';
+                
+                // 重新渲染"从"的代币列表（显示持仓代币）
+                renderTokenDropdown('from');
+                
+                // 设置默认卖出代币
+                const firstToken = stockData.find(t => userPositions[t.sym]);
+                if (firstToken) {
+                    document.getElementById('fromTokenSymbol').innerText = firstToken.sym;
+                    document.getElementById('fromTokenIcon').src = firstToken.icon;
+                    document.getElementById('fromBalance').innerText = userPositions[firstToken.sym].toFixed(2);
+                    currentPrice = firstToken.price;
+                }
+            }
+            
+            // 清空输入
+            document.getElementById('payAmount').value = '';
+            document.getElementById('receiveAmount').value = '';
+            document.getElementById('minReceive').innerText = '0 TOKEN';
+        }
+
+        function selectToken(token, type) {
+            if (type === 'to') {
+                // 选择要买入的代币
+                currentSymbol = token.sym;
+                currentPrice = token.price;
+                currentItem = token;
+                
+                document.getElementById('toTokenSymbol').innerText = token.sym;
+                document.getElementById('toTokenIcon').src = token.icon;
+                document.getElementById('swapRate').innerText = `1 ${token.sym} ≈ $${token.price.toFixed(2)}`;
+                
+                // 关闭下拉菜单
+                document.getElementById('toTokenDropdown').style.display = 'none';
+                
+                // 重新计算
+                calculateSwap();
+                
+                // 更新详细信息
+                updateSwapDetails(token);
+            } else if (type === 'from') {
+                // 选择要卖出的代币
+                currentSymbol = token.sym;
+                currentPrice = token.price;
+                currentItem = token;
+                
+                document.getElementById('fromTokenSymbol').innerText = token.sym;
+                document.getElementById('fromTokenIcon').src = token.icon;
+                document.getElementById('fromBalance').innerText = (userPositions[token.sym] || 0).toFixed(2);
+                document.getElementById('swapRate').innerText = `1 ${token.sym} ≈ $${token.price.toFixed(2)}`;
+                
+                // 关闭下拉菜单
+                document.getElementById('fromTokenDropdown').style.display = 'none';
+                
+                // 重新计算
+                calculateSwap();
+                
+                // 更新详细信息
+                updateSwapDetails(token);
+            }
+        }
+
+        function updateSwapDetails(token) {
+            // 更新兑换率
+            const pay = parseFloat(document.getElementById('payAmount').value) || 0;
+            
+            if (swapMode === 'buy') {
+                // 买入：USDT / 代币价格
+                const receive = pay / token.price;
+                const minReceive = receive * 0.99;
+                document.getElementById('minReceive').innerText = `${minReceive.toFixed(6)} ${token.sym}`;
+            } else {
+                // 卖出：代币数量 * 代币价格
+                const receiveUSDT = pay * token.price;
+                const minReceive = receiveUSDT * 0.99;
+                document.getElementById('minReceive').innerText = `$${minReceive.toFixed(2)} USDT`;
+            }
         }
 
         function calculateSwap() {
             const pay = parseFloat(document.getElementById('payAmount').value);
             if(isNaN(pay) || pay <= 0) {
                 document.getElementById('receiveAmount').value = "";
+                document.getElementById('minReceive').innerText = swapMode === 'buy' ? "0 TOKEN" : "$0.00 USDT";
                 return;
             }
-            // 简单计算：数量 = 支付USDT / 单价
-            const amount = pay / currentPrice;
-            document.getElementById('receiveAmount').value = amount.toFixed(6);
+            
+            if (swapMode === 'buy') {
+                // 买入：USDT -> 代币
+                const amount = pay / currentPrice;
+                const symbol = document.getElementById('toTokenSymbol').innerText;
+                document.getElementById('receiveAmount').value = amount.toFixed(6);
+                
+                const minReceive = amount * 0.99;
+                document.getElementById('minReceive').innerText = `${minReceive.toFixed(6)} ${symbol}`;
+            } else {
+                // 卖出：代币 -> USDT
+                const receiveUSDT = pay * currentPrice;
+                document.getElementById('receiveAmount').value = receiveUSDT.toFixed(2);
+                
+                const minReceive = receiveUSDT * 0.99;
+                document.getElementById('minReceive').innerText = `$${minReceive.toFixed(2)} USDT`;
+            }
         }
 
         function executeSwap() {
             const pay = parseFloat(document.getElementById('payAmount').value);
             if(!pay) return alert("请输入数量");
 
+            // 验证余额
+            const fromBalance = parseFloat(document.getElementById('fromBalance').innerText);
+            if (pay > fromBalance) {
+                return alert(`余额不足！最多可用 ${fromBalance.toFixed(2)}`);
+            }
+
             // 模拟 loading
-            const btn = document.querySelector('#swapView .btn-trade');
+            const btn = document.querySelector('#swapView #swapBtn');
             const originalText = btn.innerText;
-            btn.innerText = "兑换中...";
+            btn.innerText = swapMode === 'buy' ? "购买中..." : "卖出中...";
             btn.disabled = true;
 
             setTimeout(() => {
@@ -1061,13 +1318,32 @@
                 btn.disabled = false;
                 
                 // 成功提示
-                showToast(`兑换成功！获得 ${document.getElementById('receiveAmount').value} ${currentSymbol}`);
+                const receive = document.getElementById('receiveAmount').value;
+                const toSymbol = swapMode === 'buy' ? 
+                    document.getElementById('toTokenSymbol').innerText : 'USDT';
                 
-                // 更新余额 (模拟)
-                let bal = parseFloat(document.getElementById('usdtBalance').innerText);
-                document.getElementById('usdtBalance').innerText = (bal - pay).toFixed(2);
+                if (swapMode === 'buy') {
+                    showToast(`购买成功！获得 ${receive} ${toSymbol}`);
+                } else {
+                    showToast(`卖出成功！获得 ${receive} USDT`);
+                }
                 
-                // 2秒后返回列表或详情
+                // 更新余额
+                let fromBal = parseFloat(document.getElementById('fromBalance').innerText);
+                let newFromBal = fromBal - pay;
+                document.getElementById('fromBalance').innerText = newFromBal.toFixed(2);
+                
+                // 更新USDT余额
+                if (swapMode === 'buy') {
+                    let usdtBal = 1000.00; // 模拟初始余额
+                    usdtBal -= pay;
+                    document.getElementById('fromBalance').innerText = usdtBal.toFixed(2);
+                } else {
+                    let usdtBal = 1000000.00;
+                    usdtBal += parseFloat(document.getElementById('receiveAmount').value);
+                }
+                
+                // 2秒后返回详情
                 setTimeout(() => {
                     goBack('detailView');
                 }, 1500);

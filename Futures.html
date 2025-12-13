@@ -80,35 +80,27 @@
         .header-icons i { font-size: 18px; color: var(--text-secondary); cursor: pointer; }
         
         .connect-wallet-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 12px 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            transition: transform 0.2s;
         }
         
         .connect-wallet-btn:active {
             transform: scale(0.95);
         }
         
-        .connect-wallet-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-        }
-        
         .connect-wallet-btn i {
-            font-size: 16px;
+            font-size: 12px;
         }
 
         /* --- 市场列表抽屉 (Drawer) --- */
@@ -276,10 +268,7 @@
     </div>
 
     <div class="header flex-between" id="tradingHeader">
-        <button class="connect-wallet-btn" onclick="connectWallet()">
-            <i class="fas fa-wallet"></i>
-            <span>连接钱包</span>
-        </button>
+        
         <div class="header-left">
             <i class="fas fa-arrow-left header-back-btn" onclick="handleBackClick()"></i>
             <div class="symbol-select-btn" onclick="backToList()">
@@ -453,13 +442,13 @@
         </div>
     </div>
 
-    <div class="bottom-nav">
+       <nav class="bottom-nav">
         <a href="Home.html" class="nav-item">
             <i class="fas fa-wallet"></i>
             <span>钱包</span>
         </a>
         <a href="Discover.html" class="nav-item">
-            <i class="far fa-compass"></i>
+            <i class="fas fa-compass"></i>
             <span>发现</span>
         </a>
         <a href="RWA.html" class="nav-item">

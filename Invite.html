@@ -223,6 +223,57 @@
         }
         .copy-icon { color: var(--text-dark); cursor: pointer; }
 
+        /* --- 弹窗样式 --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            right: 0; top: 0;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .option-item:last-child { border-bottom: none; }
+        .option-item img { width: 24px; margin-right: 15px; }
+        .option-item i { width: 24px; margin-right: 15px; text-align: center; font-size: 18px; color: #333; }
+        .option-item:active { background: #f9f9f9; }
+
         /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
@@ -313,6 +364,39 @@
         </div>
     </div>
 
+    <!-- 连接钱包提供商弹窗 -->
+    <div class="modal-overlay" id="walletConnectModal" onclick="closeWalletModal(event, 'walletConnectModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">选择钱包 <span class="close-modal" onclick="closeThisWalletModal('walletConnectModal')">&times;</span></div>
+            
+            <!-- 调用 WalletManager.connectMetamask() -->
+            <div class="option-item" onclick="WalletManager.connectMetamask()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="Metamask">
+                <span>MetaMask</span>
+            </div>
+            
+            <!-- 调用 WalletManager.connectBitget() -->
+            <div class="option-item" onclick="WalletManager.connectBitget()">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAgVBMVEUA8P////8AAAAA7/8A8/8A9/8AiYwAiI8A9f8AX2R19P8A6vb3/v8A6/kALzMAydTs/f8A5PIAT1QAKSlH8v+x+f+F9v/j/f8AHiEAFxgASk6Y9//O+/+5+f9Z8/+m+P8AO0AAIyIAIRwA1uEApKsAQkYANjcAVlsAm6EAsrvZ/P83Q69tAAACWUlEQVRIiZWWC3ObMAyAxeyu1EBKG4es5dXuQbb8/x84Y2MZGYukuutdyvnLp8jCFmSJKLtRabCh1diVqTWwfXQahIAQ5p+hvw3WilAIN7GWgmWToBa22QFPLDaT0HHgsMfNqEqC9T5lSV1vwTPRyQcMitYxSLn85RFDUmtNwTri3r75eIlAURIQKPfDY8ci4kwvrcGB8R22nK8tbPZv3zeTnQdLyqHvI8mZ8GCzeiaDbwKGE60D1zshK+Q+KoZzlQUiXPneJctZpQGDUBaB4/L0vxJWJZXFp+ded3xgCwthD2V1vCdPGyoD3AtZ/fTc5RZncoXOg8G35JmnXxCX6xnGBZS/Ql/n9sHv7z62hRI9KPyJr9hpbgeraadUDWj8LN9pb8viD18stfosg/PTkRDIOFsNhAzOyjkn3knJ2CmQnPjWpaR3Hu5o+nnhwwVr65wVkhP3ei5oIBfnkSbhYoAhJoPT78qBfpUNRTbERY7k25JtcOKiFhIXTY699tc1bYHd+C93S0zLXRM3DXZ3HiWPx7OoIdty8dc8Ife8CEGsX2SOC75nfMEaA/b7t+Lah5y4zofV133usCLn8V0+ECcLlnyueZKzd8D813Ikk+csdLfVl/JcbkgLdkkl45tLiherSrUP47N3FV7lessxPhjIDLCprOQ4HY0r0XgkHy9PLi6U80NHGJAiMpz/5LzQOESGkazUN0Y5oxtwNRkC+Zlz4dosDWYd7KBCXzMOzLIxNR9bDE50ZTxal2PKusGSw3ynYO0VZiA/b1clQBN13yp7pAyq7evkkv/22h/zGqVCbgAAAABJRU5ErkJggg==" alt="Bitget">
+                <span>Bitget Wallet</span>
+            </div>
+            
+            <!-- 调用 WalletManager.mockConnect() -->
+            <div class="option-item" onclick="WalletManager.mockConnect('OKX Wallet')">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJDSURBVHgB7Zq9jtpAEMfHlhEgQLiioXEkoAGECwoKxMcTRHmC5E3IoyRPkPAEkI7unJYmTgEFTYwA8a3NTKScLnCHN6c9r1e3P2llWQy7M/s1Gv1twCP0ej37dDq9x+Zut1t3t9vZjDEHIiSRSPg4ZpDL5fxkMvn1cDh8m0wmfugfO53OoFQq/crn8wxfY9EymQyrVCqMfHvScZx1p9ls3pFxXBy/bKlUipGPrVbLuQqAfsCliq3zl0H84zwtjQrOw4Mt1W63P5LvBm2d+Xz+YzqdgkqUy+WgWCy+Mc/nc282m4FqLBYL+3g8fjDxenq72WxANZbLJeA13zDX67UDioL5ybXwafMYu64Ltn3bdDoeQ5R97fd7GyhBQMipx4POeEDHIu2LfDdBIGGz+hJ9CQ1ABjoA2egAZPM6AgiCAEQhsi/C4jHyPA/6/f5NG3Ks2+3AYDC4aTccDrn6ojG54MnEvG00GoVmWLIRNZ7wTCwDHYBsdACy0QHIhiuRETxlICWpMMhGZHmqS8qH6JLyGegAZKMDkI0uKf8X4SWlaZo+Pp1bRrwlJU8ZKLIvUjKh0WiQ3sRUbNVq9c5Ebew7KEo2m/1p4jJ4qAmDaqDQBzj5XyiAT4VCQezJigAU+IDU+z8vJFnGWeC+bKQV/5VZ71FV6L7PA3gg3tXrdQ+DgLhC+75Wq3no69P3MC0NFQpx2lL04Ql9gHK1bRDjsSBIvScBnDTk1WrlGIZBorIDEYJj+rhdgnQ67VmWRe0zlplXl81vcyEt0rSoYDUAAAAASUVORK5CYII=" alt="TP">
+                <span>OKX Wallet</span>
+            </div>
+             <div class="option-item" onclick="WalletManager.mockConnect('TokenPocket')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU7MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
+                <span>TokenPocket</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 引入钱包管理脚本 -->
+    <script src="wallet.js"></script>
+
     <div class="bottom-nav">
         <a href="Home.html" class="nav-item">
             <i class="fas fa-wallet"></i>
@@ -341,12 +425,18 @@
     </div>
 
     <script>
+        // 钱包弹窗控制函数
+        function closeWalletModal(e, id) {
+            if (e.target.id === id) {
+                document.getElementById(id).style.display = 'none';
+            }
+        }
+        function closeThisWalletModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
         function connectWallet() {
-            alert("正在连接钱包...");
-            // 模拟连接成功
-            setTimeout(() => {
-                alert("钱包连接成功！\n当前状态：新用户 (可绑定)");
-            }, 1000);
+            document.getElementById('walletConnectModal').style.display = 'flex';
         }
 
         function copyLink() {

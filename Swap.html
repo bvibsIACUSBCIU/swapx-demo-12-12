@@ -38,53 +38,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 20px;
         }
-        .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-        .logo i { color: #FF3B30; }
-        
-        /* 钱包按钮 - 左上角放置，与兑换按钮风格一致 */
-        .connect-wallet-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 12px 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
+        .logo { 
+            font-size: 20px; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
             gap: 8px;
         }
-        
-        .connect-wallet-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .connect-wallet-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-        }
-        
-        .connect-wallet-btn i {
-            font-size: 16px;
-        }
-        
-        .wallet-pill {
-            background: white;
-            padding: 6px 12px;
-            border-radius: 20px;
+        .logo i { color: #FF3B30; }
+        /* 左上角连接钱包按钮 */
+        .wallet-connect-btn {
+            padding: 8px 16px;
+            border-radius: 16px;
+            border: none;
             font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            background: var(--button-gradient);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+        }
+        
+        .wallet-connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
         }
 
         /* 主交易卡片 */
@@ -452,6 +435,35 @@
             display: block;
         }
 
+        /* 钱包选择项样式 */
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            right: 0; top: 0;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .option-item:last-child { border-bottom: none; }
+        .option-item img { width: 24px; margin-right: 15px; }
+        .option-item i { width: 24px; margin-right: 15px; text-align: center; font-size: 18px; color: #333; }
+        .option-item:active { background: #f9f9f9; }
+
         @keyframes fadeIn { from {opacity:0} to {opacity:1} }
         @keyframes slideUp { from {transform:translateY(100%)} to {transform:translateY(0)} }
 
@@ -460,33 +472,30 @@
 <body>
 
     <div class="header">
-        <button class="connect-wallet-btn" onclick="connectWallet()">
-            <i class="fas fa-wallet"></i>
-            <span>连接钱包</span>
+        <button class="wallet-connect-btn" onclick="connectWallet()">
+            <i class="fas fa-wallet"></i> 连接钱包
         </button>
         <div class="logo">
             <i class="fas fa-layer-group"></i> SwapX
         </div>
-        <div class="wallet-pill">
-            <i class="fas fa-wallet" style="color:#FF3B30"></i>
-            0xB4...3B3
-            <i class="fas fa-chevron-down" style="font-size:10px; margin-left:5px;"></i>
-        </div>
-        <i class="fas fa-bars" style="font-size:20px;"></i>
     </div>
 
     <div class="swap-container">
+        <!-- 主导航标签 -->
+        <div style="display:flex; justify-content:space-around; margin-bottom:15px; border-bottom:1px solid #e0e0e0; padding-bottom:10px;">
+            <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:8px; cursor:pointer; flex:1; text-align:center;" onclick="switchMode('swap')">兑换</div>
+            <div style="color:#999; cursor:pointer; flex:1; text-align:center;" onclick="switchMode('liquidity')">流动性池</div>
+            <div style="color:#999; cursor:pointer; flex:1; text-align:center;" onclick="switchMode('otc')">OTC</div>
+            <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px; flex:0; padding-top:8px;" onclick="toggleSlippageMenu()"></i>
+        </div>
+        
         <div class="swap-card" id="swapMode">
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
-                <div style="color:#999; cursor:pointer;" onclick="switchMode('buy')">购买</div>
-                <div style="color:#999; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
-                <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
-            </div>
-
             <div class="input-box">
                 <div class="label-row">
-                    <span>从 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="fromChainText">Ethereum</span></span>
+                    <span style="cursor:pointer; font-weight:600;" onclick="openChainModal('from')">
+                        从 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="fromChainText">Ethereum</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px; margin-left:5px;"></i>
+                    </span>
                 </div>
                 <div class="input-row">
                     <input type="number" class="amount-input" id="payInput" placeholder="0.00" oninput="calculateOutput()">
@@ -512,7 +521,10 @@
 
             <div class="input-box" style="margin-top:-18px; padding-top:25px;">
                 <div class="label-row">
-                    <span>到 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="toChainText">Ethereum</span></span>
+                    <span style="cursor:pointer; font-weight:600;" onclick="openChainModal('to')">
+                        到 <i class="fab fa-ethereum" style="color:#627EEA"></i> <span id="toChainText">Ethereum</span>
+                        <i class="fas fa-chevron-down" style="font-size:10px; margin-left:5px;"></i>
+                    </span>
                 </div>
                 <div class="input-row">
                     <input type="text" class="amount-input" id="receiveInput" placeholder="0.00" readonly>
@@ -531,18 +543,71 @@
 
             <button class="action-btn btn-active" id="mainBtn" onclick="executeSwap()">输入金额</button>
         </div>
-
-        <!-- 购买页面 -->
-        <div class="buy-sell-container" id="buyMode">
+        
+        <!-- 流动性池页面 -->
+        <div class="buy-sell-container" id="liquidityMode">
             <div class="swap-card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
-                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('buy')">购买</div>
-                    <div style="color:#999; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
-                    <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
+                <!-- 统计数据 -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
+                    <div style="background:linear-gradient(135deg, #ffdee9 0%, #fff 100%); border-radius:16px; padding:20px;">
+                        <div style="font-size:12px; color:#999; margin-bottom:8px;">总交易量</div>
+                        <div style="font-size:24px; font-weight:700; color:#000;">$923,376,028.06</div>
+                        <div style="font-size:12px; color:#999; margin-top:8px;">
+                            <span style="display:inline-block; width:8px; height:8px; background:#8B5CF6; border-radius:2px; margin-right:4px;"></span>v2
+                            <span style="display:inline-block; width:8px; height:8px; background:#EC4899; border-radius:2px; margin-left:12px; margin-right:4px;"></span>v3
+                        </div>
+                    </div>
+                    <div style="background:linear-gradient(135deg, #c2e9fb 0%, #fff 100%); border-radius:16px; padding:20px;">
+                        <div style="font-size:12px; color:#999; margin-bottom:8px;">总锁仓量</div>
+                        <div style="font-size:24px; font-weight:700; color:#000;">$4,881,762.67</div>
+                        <div style="font-size:12px; color:#999; margin-top:8px;">
+                            <span style="display:inline-block; width:8px; height:8px; background:#8B5CF6; border-radius:2px; margin-right:4px;"></span>v2
+                            <span style="display:inline-block; width:8px; height:8px; background:#EC4899; border-radius:2px; margin-left:12px; margin-right:4px;"></span>v3
+                        </div>
+                    </div>
                 </div>
 
-                <div class="buy-form">
+                <!-- 控制栏 -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; gap:10px;">
+                        <button id="v2Btn" onclick="switchLiquidityVersion('v2')" style="padding:8px 16px; background:#000; color:white; border:none; border-radius:20px; font-weight:600; cursor:pointer;">V2</button>
+                        <button id="v3Btn" onclick="switchLiquidityVersion('v3')" style="padding:8px 16px; background:white; color:#000; border:1px solid #e0e0e0; border-radius:20px; font-weight:600; cursor:pointer;">V3</button>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center; flex:1; justify-content:flex-end;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:white; padding:8px 14px; border-radius:20px; border:1px solid #e0e0e0;">
+                            <input type="checkbox" id="myPositionsCheckbox" onchange="toggleMyPositions()" style="width:16px; height:16px;">
+                            <span style="font-size:14px; color:#666;">我的持仓</span>
+                        </label>
+                        <input type="text" id="liquiditySearch" placeholder="搜索..." oninput="searchLiquidity()" style="padding:8px 12px; background:#f5f5f5; border:none; border-radius:8px; width:140px; outline:none;">
+                    </div>
+                    <button onclick="openLiquidityCreator()" style="padding:10px 20px; background:var(--button-gradient); color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer; margin-left:10px;">+ 创建</button>
+                </div>
+
+                <!-- 列表头 -->
+                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; padding:10px 0; border-bottom:1px solid #e0e0e0; font-size:12px; color:#999; font-weight:600;">
+                    <div>流动性池</div>
+                    <div>合约</div>
+                    <div>TVL</div>
+                    <div>一天交易量</div>
+                    <div>年化利率</div>
+                </div>
+
+                <!-- 流动性池列表 -->
+                <div id="liquidityListContainer" style="display:flex; flex-direction:column; gap:12px; margin-top:10px; max-height:450px; overflow-y:auto;">
+                    <!-- 动态生成的流动性池列表 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- OTC页面 -->
+        <div class="buy-sell-container" id="otcMode">
+            <div class="swap-card">
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button class="action-btn" id="buyBtn" onclick="switchOTCMode('buy')" style="flex:1; background:#FF6B6B; color:white; border:none; border-radius:12px;">购买</button>
+                    <button class="action-btn" id="sellBtn" onclick="switchOTCMode('sell')" style="flex:1; background:#f0f0f0; color:#000; border:none; border-radius:12px;">卖出</button>
+                </div>
+
+                <div class="buy-form" id="buyFormContent">
                     <div class="form-group">
                         <label class="form-group-label">选择代币</label>
                         <div class="token-select-btn" onclick="openBuyTokenModal()">
@@ -579,20 +644,8 @@
 
                     <button class="action-btn btn-active" onclick="executeBuy()">购买</button>
                 </div>
-            </div>
-        </div>
-
-        <!-- 卖出页面 -->
-        <div class="buy-sell-container" id="sellMode">
-            <div class="swap-card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('swap')">兑换</div>
-                    <div style="color:#999; cursor:pointer;" onclick="switchMode('buy')">购买</div>
-                    <div style="font-weight:700; border-bottom:2px solid #000; padding-bottom:2px; cursor:pointer;" onclick="switchMode('sell')">卖出</div>
-                    <i class="fas fa-sliders-h" style="color:#999; cursor:pointer; font-size:18px;" onclick="toggleSlippageMenu()"></i>
-                </div>
-
-                <div class="sell-form">
+                
+                <div class="sell-form" id="sellFormContent" style="display:none;">
                     <div class="form-group">
                         <label class="form-group-label">选择代币</label>
                         <div class="token-select-btn" onclick="openSellTokenModal()">
@@ -660,28 +713,61 @@
                     <div><div style="font-weight:700; font-size:14px;">XRP</div><div style="font-size:11px; color:#f00;">-1.5%</div></div>
                 </div>
                 <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
-                    <img src="https://cryptologos.cc/logos/tesla-tsla-logo.png" width="24">
-                    <div><div style="font-weight:700; font-size:14px;">TSLA</div><div style="font-size:11px; color:#0f0;">+2.1%</div></div>
+                    <img src="https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1644979850" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">NBN</div><div style="font-size:11px; color:#0f0;">+2.1%</div></div>
                 </div>
                 <div style="flex:0 0 auto; background:white; padding:12px; border-radius:12px; display:flex; align-items:center; gap:8px; min-width:100px;">
-                    <img src="https://cryptologos.cc/logos/luna-luna-logo.png" width="24">
-                    <div><div style="font-weight:700; font-size:14px;">LUNA</div><div style="font-size:11px; color:#f00;">-0.8%</div></div>
+                    <img src="https://coin-images.coingecko.com/coins/images/9956/large/Badge_Dai.png?1696509996" width="24">
+                    <div><div style="font-weight:700; font-size:14px;">DAI</div><div style="font-size:11px; color:#f00;">-0.8%</div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="bottom-nav">
-        <a href="Home.html" class="nav-item">
+    <!-- 连接钱包提供商弹窗 -->
+    <div class="modal-overlay" id="walletConnectModal" onclick="closeWalletModal(event, 'walletConnectModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">选择钱包 <span class="close-modal" onclick="closeThisWalletModal('walletConnectModal')">&times;</span></div>
+            
+            <!-- 调用 WalletManager.connectMetamask() -->
+            <div class="option-item" onclick="WalletManager.connectMetamask()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="Metamask">
+                <span>MetaMask</span>
+            </div>
+            
+            <!-- 调用 WalletManager.connectBitget() -->
+            <div class="option-item" onclick="WalletManager.connectBitget()">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAgVBMVEUA8P////8AAAAA7/8A8/8A9/8AiYwAiI8A9f8AX2R19P8A6vb3/v8A6/kALzMAydTs/f8A5PIAT1QAKSlH8v+x+f+F9v/j/f8AHiEAFxgASk6Y9//O+/+5+f9Z8/+m+P8AO0AAIyIAIRwA1uEApKsAQkYANjcAVlsAm6EAsrvZ/P83Q69tAAACWUlEQVRIiZWWC3ObMAyAxeyu1EBKG4es5dXuQbb8/x84Y2MZGYukuutdyvnLp8jCFmSJKLtRabCh1diVqTWwfXQahIAQ5p+hvw3WilAIN7GWgmWToBa22QFPLDaT0HHgsMfNqEqC9T5lSV1vwTPRyQcMitYxSLn85RFDUmtNwTri3r75eIlAURIQKPfDY8ci4kwvrcGB8R22nK8tbPZv3zeTnQdLyqHvI8mZ8GCzeiaDbwKGE60D1zshK+Q+KoZzlQUiXPneJctZpQGDUBaB4/L0vxJWJZXFp+ded3xgCwthD2V1vCdPGyoD3AtZ/fTc5RZncoXOg8G35JmnXxCX6xnGBZS/Ql/n9sHv7z62hRI9KPyJr9hpbgeraadUDWj8LN9pb8viD18stfosg/PTkRDIOFsNhAzOyjkn3knJ2CmQnPjWpaR3Hu5o+nnhwwVr65wVkhP3ei5oIBfnkSbhYoAhJoPT78qBfpUNRTbERY7k25JtcOKiFhIXTY699tc1bYHd+C93S0zLXRM3DXZ3HiWPx7OoIdty8dc8Ife8CEGsX2SOC75nfMEaA/b7t+Lah5y4zofV133usCLn8V0+ECcLlnyueZKzd8D813Ikk+csdLfVl/JcbkgLdkkl45tLiherSrUP47N3FV7lessxPhjIDLCprOQ4HY0r0XgkHy9PLi6U80NHGJAiMpz/5LzQOESGkazUN0Y5oxtwNRkC+Zlz4dosDWYd7KBCXzMOzLIxNR9bDE50ZTxal2PKusGSw3ynYO0VZiA/b1clQBN13yp7pAyq7evkkv/22h/zGqVCbgAAAABJRU5ErkJggg==" alt="Bitget">
+                <span>Bitget Wallet</span>
+            </div>
+            
+            <!-- 调用 WalletManager.mockConnect() -->
+            <div class="option-item" onclick="WalletManager.mockConnect('OKX Wallet')">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJDSURBVHgB7Zq9jtpAEMfHlhEgQLiioXEkoAGECwoKxMcTRHmC5E3IoyRPkPAEkI7unJYmTgEFTYwA8a3NTKScLnCHN6c9r1e3P2llWQy7M/s1Gv1twCP0ej37dDq9x+Zut1t3t9vZjDEHIiSRSPg4ZpDL5fxkMvn1cDh8m0wmfugfO53OoFQq/crn8wxfY9EymQyrVCqMfHvScZx1p9ls3pFxXBy/bKlUipGPrVbLuQqAfsCliq3zl0H84zwtjQrOw4Mt1W63P5LvBm2d+Xz+YzqdgkqUy+WgWCy+Mc/nc282m4FqLBYL+3g8fjDxenq72WxANZbLJeA13zDX67UDioL5ybXwafMYu64Ltn3bdDoeQ5R97fd7GyhBQMipx4POeEDHIu2LfDdBIGGz+hJ9CQ1ABjoA2egAZPM6AgiCAEQhsi/C4jHyPA/6/f5NG3Ks2+3AYDC4aTccDrn6ojG54MnEvG00GoVmWLIRNZ7wTCwDHYBsdACy0QHIhiuRETxlICWpMMhGZHmqS8qH6JLyGegAZKMDkI0uKf8X4SWlaZo+Pp1bRrwlJU8ZKLIvUjKh0WiQ3sRUbNVq9c5Ebew7KEo2m/1p4jJ4qAmDaqDQBzj5XyiAT4VCQezJigAU+IDU+z8vJFnGWeC+bKQV/5VZ71FV6L7PA3gg3tXrdQ+DgLhC+75Wq3no69P3MC0NFQpx2lL04Ql9gHK1bRDjsSBIvScBnDTk1WrlGIZBorIDEYJj+rhdgnQ67VmWRe0zlplXl81vcyEt0rSoYDUAAAAASUVORK5CYII=" alt="TP">
+                <span>OKX Wallet</span>
+            </div>
+             <div class="option-item" onclick="WalletManager.mockConnect('TokenPocket')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU7MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
+                <span>TokenPocket</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 引入钱包管理脚本 -->
+    <script src="wallet.js"></script>
+
+       <nav class="bottom-nav">
+        <a href="Home.html" class="nav-item ">
             <i class="fas fa-wallet"></i>
-            <span>首页</span>
+            <span>钱包</span>
         </a>
         <a href="Discover.html" class="nav-item">
-            <i class="far fa-compass"></i>
+            <i class="fas fa-compass"></i>
             <span>发现</span>
         </a>
         <a href="RWA.html" class="nav-item">
-            <i class="fas fa-chart-pie"></i>
+            <i class="fas fa-chart-line"></i>
             <span>RWA</span>
         </a>
         <a href="Futures.html" class="nav-item">
@@ -690,10 +776,10 @@
         </a>
         <a href="Swap.html" class="nav-item active">
             <i class="fas fa-exchange-alt"></i>
-            <span>交易</span>
+            <span>兑换</span>
         </a>
         <a href="Invite.html" class="nav-item">
-            <i class="far fa-user"></i>
+            <i class="fas fa-user-plus"></i>
             <span>邀请</span>
         </a>
     </div>
@@ -817,6 +903,137 @@
         </div>
     </div>
 
+    <!-- 流动性池创建模态框 -->
+    <div class="modal-overlay" id="liquidityCreatorModal" onclick="closeLiquidityCreator(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="height:auto; max-height:90vh;">
+            <div class="modal-header">
+                <span class="modal-title">创建流动性池</span>
+                <span class="close-btn" onclick="closeLiquidityCreator()">&times;</span>
+            </div>
+            
+            <!-- 版本选择 -->
+            <div style="padding:20px; border-bottom:1px solid #f0f0f0;">
+                <div style="font-size:14px; font-weight:600; margin-bottom:10px; color:#666;">流动性池版本</div>
+                <div style="display:flex; gap:10px;">
+                    <button id="creatorV2Btn" onclick="setCreatorVersion('v2')" style="flex:1; padding:10px; background:#000; color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer;">V2</button>
+                    <button id="creatorV3Btn" onclick="setCreatorVersion('v3')" style="flex:1; padding:10px; background:white; color:#000; border:1px solid #e0e0e0; border-radius:12px; font-weight:600; cursor:pointer;">V3</button>
+                </div>
+            </div>
+
+            <!-- 创建表单 -->
+            <div style="padding:20px; overflow-y:auto;">
+                <!-- 第一个代币选择 -->
+                <div class="form-group">
+                    <label class="form-group-label">选择代币对</label>
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <div class="token-select-btn" onclick="openLiquidityTokenModal('token1')">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <img id="liquidityToken1Icon" src="https://cryptologos.cc/logos/ethereum-eth-logo.png" style="width:24px; height:24px; border-radius:50%;">
+                                    <span id="liquidityToken1Symbol">ETH</span>
+                                </div>
+                                <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                            </div>
+                        </div>
+                        <div style="flex:1;">
+                            <div class="token-select-btn" onclick="openLiquidityTokenModal('token2')">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <img id="liquidityToken2Icon" src="https://cryptologos.cc/logos/tether-usdt-logo.png" style="width:24px; height:24px; border-radius:50%;">
+                                    <span id="liquidityToken2Symbol">USDT</span>
+                                </div>
+                                <i class="fas fa-chevron-down" style="font-size:12px; color:#999;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第一个代币数量 -->
+                <div class="form-group">
+                    <label class="form-group-label" id="token1DepositLabel">存款ETH数额</label>
+                    <input type="number" class="form-input" id="token1Amount" placeholder="0.00" oninput="updateLiquidityPreview()" style="margin-top:8px;">
+                    <div class="balance-row" style="margin-top:8px; justify-content:flex-start;">
+                        <span>余额: <span id="liquidityToken1Balance">1.50</span></span>
+                    </div>
+                </div>
+
+                <!-- 第二个代币数量 -->
+                <div class="form-group">
+                    <label class="form-group-label" id="token2DepositLabel">存款USDT数额</label>
+                    <input type="number" class="form-input" id="token2Amount" placeholder="0.00" oninput="updateLiquidityPreview()" style="margin-top:8px;">
+                    <div class="balance-row" style="margin-top:8px; justify-content:flex-start;">
+                        <span>余额: <span id="liquidityToken2Balance">0.00</span></span>
+                    </div>
+                </div>
+
+                <!-- V3 费用等级选择 -->
+                <div id="v3FeeSection" style="display:none;">
+                    <div class="form-group">
+                        <label class="form-group-label">费用等级</label>
+                        <div style="display:flex; gap:10px; margin-top:8px;">
+                            <div style="flex:1; padding:12px; background:#f9f9f9; border-radius:12px; border:1px solid #e0e0e0; text-align:center; cursor:pointer;" onclick="setFeeLevel(0.05)">
+                                <div style="font-size:16px; font-weight:600; color:#FF6B6B;">0.05%</div>
+                                <div style="font-size:12px; color:#999; margin-top:4px;">最佳稳定性</div>
+                            </div>
+                            <div style="flex:1; padding:12px; background:#f9f9f9; border-radius:12px; border:1px solid #e0e0e0; text-align:center; cursor:pointer;" onclick="setFeeLevel(0.3)">
+                                <div style="font-size:16px; font-weight:600; color:#FF6B6B;">0.3%</div>
+                                <div style="font-size:12px; color:#999; margin-top:4px;">最常见</div>
+                            </div>
+                            <div style="flex:1; padding:12px; background:#f9f9f9; border-radius:12px; border:1px solid #e0e0e0; text-align:center; cursor:pointer;" onclick="setFeeLevel(1)">
+                                <div style="font-size:16px; font-weight:600; color:#FF6B6B;">1%</div>
+                                <div style="font-size:12px; color:#999; margin-top:4px;">高波动性</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 价格范围 -->
+                    <div class="form-group">
+                        <label class="form-group-label">价格范围</label>
+                        <div style="display:flex; gap:10px; margin-top:8px;">
+                            <div style="flex:1;">
+                                <label style="font-size:12px; color:#999;">最低价格</label>
+                                <input type="number" class="form-input" id="priceLow" placeholder="0.00" oninput="updateLiquidityPreview()" style="margin-top:4px;">
+                            </div>
+                            <div style="flex:1;">
+                                <label style="font-size:12px; color:#999;">最高价格</label>
+                                <input type="number" class="form-input" id="priceHigh" placeholder="0.00" oninput="updateLiquidityPreview()" style="margin-top:4px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 价格范围快速选择 -->
+                    <div class="form-group">
+                        <label class="form-group-label">快速设置范围</label>
+                        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                            <button onclick="setPriceRange(0.9, 1.1)" style="flex:1; min-width:60px; padding:8px 12px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:8px; font-size:12px; cursor:pointer;">±10%</button>
+                            <button onclick="setPriceRange(0.8, 1.2)" style="flex:1; min-width:60px; padding:8px 12px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:8px; font-size:12px; cursor:pointer;">±20%</button>
+                            <button onclick="setPriceRange(0.5, 1.5)" style="flex:1; min-width:60px; padding:8px 12px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:8px; font-size:12px; cursor:pointer;">±50%</button>
+                            <button onclick="setPriceRange(0, 999999)" style="flex:1; min-width:60px; padding:8px 12px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:8px; font-size:12px; cursor:pointer;">全范围</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <button class="action-btn btn-active" onclick="createLiquidity()" style="margin-top:20px;">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 流动性池代币选择弹窗 -->
+    <div class="modal-overlay" id="liquidityTokenModal" onclick="closeLiquidityTokenModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span class="modal-title">选择代币</span>
+                <span class="close-btn" onclick="closeLiquidityTokenModal()">&times;</span>
+            </div>
+            <div style="padding: 10px 20px;">
+                <input type="text" placeholder="搜索代币" style="width:100%; padding:10px; background:#f5f5f5; border:none; border-radius:8px; outline:none;">
+            </div>
+            <div class="modal-body" style="flex-direction:column;">
+                <div class="token-column" id="liquidityTokenListContainer"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- 模拟数据 ---
         const chains = [
@@ -833,7 +1050,7 @@
             { sym: 'ETH', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', chain: 'eth', price: 3200 },
             { sym: 'USDT', name: 'Tether USD', icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png', chain: 'all', price: 1 },
             { sym: 'USDC', name: 'USD Coin', icon: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png', chain: 'all', price: 1 },
-            { sym: 'USDH', name: 'Huobi Dollar', icon: 'https://cryptologos.cc/logos/huobi-token-ht-logo.png', chain: 'all', price: 1 },
+            { sym: 'USDH', name: 'Huobi Dollar', icon: 'data:image/png;base64,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', chain: 'all', price: 1 },
             { sym: 'UNI', name: 'Uniswap', icon: 'https://cryptologos.cc/logos/uniswap-uni-logo.png', chain: 'eth', price: 6 },
             { sym: 'BNB', name: 'BNB', icon: 'https://cryptologos.cc/logos/bnb-bnb-logo.png', chain: 'bsc', price: 600 },
             { sym: 'CAKE', name: 'PancakeSwap', icon: 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png', chain: 'bsc', price: 2.5 },
@@ -841,8 +1058,8 @@
             { sym: 'BTC', name: 'Bitcoin', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png', chain: 'all', price: 92440 },
             { sym: 'SOL', name: 'Solana', icon: 'https://cryptologos.cc/logos/solana-sol-logo.png', chain: 'all', price: 220 },
             { sym: 'XRP', name: 'XRP', icon: 'https://cryptologos.cc/logos/xrp-xrp-logo.png', chain: 'all', price: 3.5 },
-            { sym: 'TSLA', name: 'Tesla Token', icon: 'https://cryptologos.cc/logos/tesla-tsla-logo.png', chain: 'all', price: 410 },
-            { sym: 'LUNA', name: 'Luna', icon: 'https://cryptologos.cc/logos/luna-luna-logo.png', chain: 'all', price: 125 }
+            { sym: 'SEI', name: 'Tesla Token', icon: 'https://assets.coingecko.com/coins/images/54862/thumb/sei.jpg?1742182276', chain: 'all', price: 410 },
+            { sym: 'ADS', name: 'Luna', icon: 'https://assets.coingecko.com/coins/images/17979/thumb/ADS.png?1706546465', chain: 'all', price: 125 }
         ];
 
         // 支付方式
@@ -863,18 +1080,44 @@
 
         // --- 状态 ---
         let state = {
-            currentMode: 'swap', // 'swap', 'buy', 'sell'
+            currentMode: 'swap', // 'swap', 'liquidity', 'otc'
+            currentOTCMode: 'buy', // 'buy' 或 'sell' (仅在 OTC 模式下使用)
             currentTokenMode: 'pay', // 用于兑换页面
+            currentChainMode: 'from', // 用于标识当前选择的是'from'还是'to'网络
             payToken: tokens[0],
             receiveToken: tokens[1],
             payBalance: 1.5,
             receiveBalance: 0.0,
             selectedChainFilter: 'eth',
+            fromChain: 'eth',  // 用于"从"网络显示
+            toChain: 'eth',    // 用于"到"网络显示
             buyToken: tokens[1], // USDT
             sellToken: tokens[1], // USDT
             selectedPaymentMethod: null,
             selectedChannel: null,
             selectedSlippage: 'auto'
+        };
+
+        // --- 流动性池数据 ---
+        let liquidityState = {
+            currentVersion: 'v2', // 'v2' 或 'v3'
+            creatorVersion: 'v2',
+            selectedTokenMode: null,
+            token1: tokens[0], // ETH
+            token2: tokens[1], // USDT
+            showOnlyMyPositions: false,
+            feeLevel: 0.3,
+            currentPrice: 3200, // ETH/USDT 价格
+            liquidityPools: [
+                { id: 1, token1: tokens[1], token2: tokens[5], version: 'v2', liquidity: '1200000', tvl: '$31,180,009', myShare: '$163M', fee: 0.01, dailyVolume: '$100M', apr: 25.82 },
+                { id: 2, token1: tokens[1], token2: tokens[2], version: 'v2', liquidity: '900000', tvl: '$21,523,926', myShare: '$32,264,331', fee: 0.05, dailyVolume: '$120M', apr: 29.32 },
+                { id: 3, token1: tokens[1], token2: tokens[3], version: 'v2', liquidity: '750000', tvl: '$3,767,909', myShare: '$48,262,482', fee: 0.01, dailyVolume: '$85M', apr: 48.62 },
+                { id: 4, token1: tokens[5], token2: tokens[11], version: 'v2', liquidity: '650000', tvl: '$2,870,493.9', myShare: '$30,797,048', fee: 0.01, dailyVolume: '$95M', apr: 40.91 },
+                { id: 5, token1: tokens[1], token2: tokens[10], version: 'v2', liquidity: '800000', tvl: '$6,926,098.1', myShare: '$47,161,436', fee: 0.01, dailyVolume: '$110M', apr: 24.97 },
+                { id: 6, token1: tokens[1], token2: tokens[9], version: 'v2', liquidity: '550000', tvl: '$100M', myShare: '$8,065,966.2', fee: 0.25, dailyVolume: '$75M', apr: 5.00 },
+                { id: 7, token1: tokens[1], token2: tokens[8], version: 'v2', liquidity: '1100000', tvl: '$26,762,922', myShare: '$3,323,286.7', fee: 0.01, dailyVolume: '$130M', apr: 0.60 },
+                { id: 8, token1: tokens[1], token2: tokens[12], version: 'v2', liquidity: '950000', tvl: '$156M', myShare: '$14,411,271', fee: 0.01, dailyVolume: '$105M', apr: 0.33 },
+            ]
         };
 
         // --- 初始化 ---
@@ -885,6 +1128,8 @@
             renderSellTokenList();
             renderPaymentMethodList();
             renderChannelList();
+            renderLiquidityTokenList();
+            renderLiquidityList();
             updateUI();
         };
 
@@ -892,12 +1137,48 @@
         function switchMode(mode) {
             state.currentMode = mode;
             const swapMode = document.getElementById('swapMode');
-            const buyMode = document.getElementById('buyMode');
-            const sellMode = document.getElementById('sellMode');
+            const liquidityMode = document.getElementById('liquidityMode');
+            const otcMode = document.getElementById('otcMode');
             
             swapMode.style.display = mode === 'swap' ? 'block' : 'none';
-            buyMode.classList.toggle('active', mode === 'buy');
-            sellMode.classList.toggle('active', mode === 'sell');
+            liquidityMode.style.display = mode === 'liquidity' ? 'block' : 'none';
+            otcMode.style.display = mode === 'otc' ? 'block' : 'none';
+            
+            // 更新顶部导航栏的激活状态
+            const navTabs = document.querySelectorAll('.swap-container > div:first-child > div');
+            if (navTabs.length >= 3) {
+                navTabs[0].style.borderBottom = mode === 'swap' ? '2px solid #000' : 'none';
+                navTabs[0].style.color = mode === 'swap' ? '#000' : '#999';
+                navTabs[1].style.borderBottom = mode === 'liquidity' ? '2px solid #000' : 'none';
+                navTabs[1].style.color = mode === 'liquidity' ? '#000' : '#999';
+                navTabs[2].style.borderBottom = mode === 'otc' ? '2px solid #000' : 'none';
+                navTabs[2].style.color = mode === 'otc' ? '#000' : '#999';
+            }
+        }
+        
+        // --- OTC 模式切换（购买/卖出）---
+        function switchOTCMode(mode) {
+            state.currentOTCMode = mode;
+            const buyBtn = document.getElementById('buyBtn');
+            const sellBtn = document.getElementById('sellBtn');
+            const buyFormContent = document.getElementById('buyFormContent');
+            const sellFormContent = document.getElementById('sellFormContent');
+            
+            if (mode === 'buy') {
+                buyBtn.style.background = '#FF6B6B';
+                buyBtn.style.color = 'white';
+                sellBtn.style.background = '#f0f0f0';
+                sellBtn.style.color = '#000';
+                buyFormContent.style.display = 'block';
+                sellFormContent.style.display = 'none';
+            } else {
+                buyBtn.style.background = '#f0f0f0';
+                buyBtn.style.color = '#000';
+                sellBtn.style.background = '#FF6B6B';
+                sellBtn.style.color = 'white';
+                buyFormContent.style.display = 'none';
+                sellFormContent.style.display = 'block';
+            }
         }
 
         // --- 渲染逻辑 ---
@@ -981,6 +1262,12 @@
             document.getElementById('payBalance').innerText = state.payBalance.toFixed(4);
             document.getElementById('receiveBalance').innerText = state.receiveBalance.toFixed(4);
 
+            // 更新网络名称
+            const fromChainName = chains.find(c => c.id === state.fromChain)?.name || 'Ethereum';
+            const toChainName = chains.find(c => c.id === state.toChain)?.name || 'Ethereum';
+            document.getElementById('fromChainText').innerText = fromChainName;
+            document.getElementById('toChainText').innerText = toChainName;
+
             // 更新购买页面
             document.getElementById('buyTokenIcon').src = state.buyToken.icon;
             document.getElementById('buyTokenName').innerText = state.buyToken.sym;
@@ -995,9 +1282,25 @@
 
         // --- 交互逻辑 ---
 
+        // 兑换页面 - 打开网络选择
+        function openChainModal(mode) {
+            state.currentChainMode = mode; // 'from' 或 'to'
+            state.selectedChainFilter = mode === 'from' ? state.fromChain : state.toChain;
+            renderChains();
+            // 隐藏代币列表，只显示链列表
+            document.getElementById('tokenListContainer').style.display = 'none';
+            document.getElementById('chainListContainer').style.display = 'block';
+            document.getElementById('tokenModal').classList.add('active');
+        }
+
         // 兑换页面 - 打开代币选择
         function openTokenModal(mode) {
             state.currentTokenMode = mode;
+            const currentChain = mode === 'pay' ? state.fromChain : state.toChain;
+            renderTokens(currentChain);
+            // 显示代币列表和链列表
+            document.getElementById('tokenListContainer').style.display = 'block';
+            document.getElementById('chainListContainer').style.display = 'block';
             document.getElementById('tokenModal').classList.add('active');
         }
 
@@ -1086,8 +1389,27 @@
         // 兑换页面 - 链选择
         function selectChainFilter(chainId) {
             state.selectedChainFilter = chainId;
+            
+            // 根据当前模式独立更新 fromChain 或 toChain
+            if (state.currentChainMode === 'from') {
+                state.fromChain = chainId;
+                // 根据选择的链过滤代币并更新 payToken
+                const availableTokens = tokens.filter(t => t.chain === 'all' || t.chain === chainId);
+                if (availableTokens.length > 0 && !availableTokens.find(t => t.sym === state.payToken.sym)) {
+                    state.payToken = availableTokens[0];
+                }
+            } else if (state.currentChainMode === 'to') {
+                state.toChain = chainId;
+                // 根据选择的链过滤代币并更新 receiveToken
+                const availableTokens = tokens.filter(t => t.chain === 'all' || t.chain === chainId);
+                if (availableTokens.length > 0 && !availableTokens.find(t => t.sym === state.receiveToken.sym)) {
+                    state.receiveToken = availableTokens[0];
+                }
+            }
+            
             renderChains();
-            renderTokens(chainId);
+            document.getElementById('tokenModal').classList.remove('active');
+            updateUI();
         }
 
         // 兑换页面 - 代币选择
@@ -1106,10 +1428,17 @@
 
         // 点击中间箭头交换
         function switchDirection() {
+            // 交换网络
+            const tempChain = state.fromChain;
+            state.fromChain = state.toChain;
+            state.toChain = tempChain;
+            
+            // 交换代币
             const tempToken = state.payToken;
             state.payToken = state.receiveToken;
             state.receiveToken = tempToken;
             
+            // 交换余额
             const tempBal = state.payBalance;
             state.payBalance = state.receiveBalance;
             state.receiveBalance = tempBal;
@@ -1234,8 +1563,231 @@
             state.selectedChannel = null;
         }
         
+        
+        // --- 流动性池函数 ---
+        
+        function renderLiquidityTokenList() {
+            const container = document.getElementById('liquidityTokenListContainer');
+            container.innerHTML = tokens.map(t => `
+                <div class="token-item" onclick="selectLiquidityToken('${t.sym}')">
+                    <img src="${t.icon}">
+                    <div class="token-text">
+                        <h4>${t.sym}</h4>
+                        <p>${t.name}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderLiquidityList() {
+            const container = document.getElementById('liquidityListContainer');
+            let pools = liquidityState.liquidityPools;
+            
+            // 筛选版本
+            pools = pools.filter(p => p.version === liquidityState.currentVersion);
+            
+            // 筛选我的持仓
+            if (liquidityState.showOnlyMyPositions) {
+                pools = pools.filter(p => p.myShare && parseFloat(p.myShare.replace('$', '')) > 0);
+            }
+            
+            // 搜索过滤
+            const searchTerm = document.getElementById('liquiditySearch')?.value.toLowerCase() || '';
+            if (searchTerm) {
+                pools = pools.filter(p => 
+                    p.token1.sym.toLowerCase().includes(searchTerm) ||
+                    p.token2.sym.toLowerCase().includes(searchTerm) ||
+                    `${p.token1.sym}-${p.token2.sym}`.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            container.innerHTML = pools.map(pool => `
+                <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:15px; align-items:center; padding:12px 0; border-bottom:1px solid #f0f0f0; font-size:14px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="${pool.token1.icon}" style="width:32px; height:32px; border-radius:50%;">
+                        <div style="display:flex; align-items:center; gap:4px; font-weight:600;">
+                            <span>${pool.token1.sym}</span>
+                            <span style="font-size:12px; color:#999;">-</span>
+                            <span>${pool.token2.sym}</span>
+                            <img src="${pool.token2.icon}" style="width:28px; height:28px; border-radius:50%; margin-left:2px;">
+                            <span style="font-size:11px; background:#f0f0f0; padding:2px 6px; border-radius:4px; color:#666; margin-left:6px;">${pool.version.toUpperCase()} ${pool.fee}%</span>
+                        </div>
+                    </div>
+                    <div style="color:#000; font-weight:600;">${pool.address || '0x...'}</div>
+                    <div style="color:#000; font-weight:600;">${pool.tvl}</div>
+                    <div style="color:#000; font-weight:600;">${pool.dailyVolume || '$0'}</div>
+                    <div style="color:#0f0; font-weight:600;">${pool.apr?.toFixed(2) || '0.00'}%</div>
+                </div>
+            `).join('');
+            
+            if (pools.length === 0) {
+                container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:#999;">暂无流动性池</div>';
+            }
+        }
+
+        function switchLiquidityVersion(version) {
+            liquidityState.currentVersion = version;
+            
+            // 更新按钮状态
+            const v2Btn = document.getElementById('v2Btn');
+            const v3Btn = document.getElementById('v3Btn');
+            
+            if (version === 'v2') {
+                v2Btn.style.background = '#000';
+                v2Btn.style.color = 'white';
+                v3Btn.style.background = 'white';
+                v3Btn.style.color = '#000';
+            } else {
+                v2Btn.style.background = 'white';
+                v2Btn.style.color = '#000';
+                v3Btn.style.background = '#000';
+                v3Btn.style.color = 'white';
+            }
+            
+            renderLiquidityList();
+        }
+
+        function toggleMyPositions() {
+            liquidityState.showOnlyMyPositions = document.getElementById('myPositionsCheckbox').checked;
+            renderLiquidityList();
+        }
+
+        function searchLiquidity() {
+            renderLiquidityList();
+        }
+
+        function openLiquidityCreator() {
+            liquidityState.creatorVersion = 'v2';
+            setCreatorVersion('v2');
+            document.getElementById('liquidityCreatorModal').classList.add('active');
+        }
+
+        function closeLiquidityCreator(event) {
+            if (event && event.target.id === 'liquidityCreatorModal') {
+                document.getElementById('liquidityCreatorModal').classList.remove('active');
+            } else if (!event) {
+                document.getElementById('liquidityCreatorModal').classList.remove('active');
+            }
+        }
+
+        function setCreatorVersion(version) {
+            liquidityState.creatorVersion = version;
+            const v2Btn = document.getElementById('creatorV2Btn');
+            const v3Btn = document.getElementById('creatorV3Btn');
+            const v3Section = document.getElementById('v3FeeSection');
+            
+            if (version === 'v2') {
+                v2Btn.style.background = '#000';
+                v2Btn.style.color = 'white';
+                v3Btn.style.background = 'white';
+                v3Btn.style.color = '#000';
+                v3Section.style.display = 'none';
+            } else {
+                v2Btn.style.background = 'white';
+                v2Btn.style.color = '#000';
+                v3Btn.style.background = '#000';
+                v3Btn.style.color = 'white';
+                v3Section.style.display = 'block';
+            }
+        }
+
+        function openLiquidityTokenModal(mode) {
+            liquidityState.selectedTokenMode = mode;
+            document.getElementById('liquidityTokenModal').classList.add('active');
+        }
+
+        function closeLiquidityTokenModal(event) {
+            if (event && event.target.id === 'liquidityTokenModal') {
+                document.getElementById('liquidityTokenModal').classList.remove('active');
+            } else if (!event) {
+                document.getElementById('liquidityTokenModal').classList.remove('active');
+            }
+        }
+
+        function selectLiquidityToken(sym) {
+            const token = tokens.find(t => t.sym === sym);
+            if (liquidityState.selectedTokenMode === 'token1') {
+                liquidityState.token1 = token;
+                document.getElementById('liquidityToken1Icon').src = token.icon;
+                document.getElementById('liquidityToken1Symbol').innerText = token.sym;
+                document.getElementById('token1DepositLabel').innerText = `存款${token.sym}数额`;
+                document.getElementById('liquidityToken1Balance').innerText = (Math.random() * 5).toFixed(4);
+            } else {
+                liquidityState.token2 = token;
+                document.getElementById('liquidityToken2Icon').src = token.icon;
+                document.getElementById('liquidityToken2Symbol').innerText = token.sym;
+                document.getElementById('token2DepositLabel').innerText = `存款${token.sym}数额`;
+                document.getElementById('liquidityToken2Balance').innerText = (Math.random() * 100).toFixed(4);
+            }
+            document.getElementById('liquidityTokenModal').classList.remove('active');
+            updateLiquidityPreview();
+        }
+
+        function setFeeLevel(fee) {
+            liquidityState.feeLevel = fee;
+        }
+
+        function setPriceRange(lowMultiplier, highMultiplier) {
+            const lowPrice = liquidityState.currentPrice * lowMultiplier;
+            const highPrice = liquidityState.currentPrice * highMultiplier;
+            document.getElementById('priceLow').value = lowPrice.toFixed(2);
+            document.getElementById('priceHigh').value = highPrice.toFixed(2);
+            updateLiquidityPreview();
+        }
+
+        function updateLiquidityPreview() {
+            const token1Amount = parseFloat(document.getElementById('token1Amount').value) || 0;
+            const token2Amount = parseFloat(document.getElementById('token2Amount').value) || 0;
+            
+            // 这里可以添加预览计算逻辑
+        }
+
+        function createLiquidity() {
+            const token1Amount = document.getElementById('token1Amount').value;
+            const token2Amount = document.getElementById('token2Amount').value;
+            
+            if (!token1Amount || !token2Amount) {
+                alert('请输入两个代币的数量');
+                return;
+            }
+            
+            const version = liquidityState.creatorVersion.toUpperCase();
+            const message = `创建${version}流动性池成功！\n${liquidityState.token1.sym}: ${token1Amount}\n${liquidityState.token2.sym}: ${token2Amount}`;
+            
+            if (liquidityState.creatorVersion === 'v3') {
+                const priceLow = document.getElementById('priceLow').value || '0.00';
+                const priceHigh = document.getElementById('priceHigh').value || '0.00';
+                alert(`${message}\n价格范围: ${priceLow} - ${priceHigh}\n费用等级: ${liquidityState.feeLevel}%`);
+            } else {
+                alert(message);
+            }
+            
+            // 重置表单
+            document.getElementById('token1Amount').value = '';
+            document.getElementById('token2Amount').value = '';
+            document.getElementById('priceLow').value = '';
+            document.getElementById('priceHigh').value = '';
+            
+            closeLiquidityCreator();
+            renderLiquidityList();
+        }
+
+        function manageLiquidity(poolId) {
+            alert(`管理流动性池 #${poolId}`);
+        }
+
+        // 钱包弹窗控制函数
+        function closeWalletModal(e, id) {
+            if (e.target.id === id) {
+                document.getElementById(id).style.display = 'none';
+            }
+        }
+        function closeThisWalletModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
         function connectWallet() {
-            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
+            document.getElementById('walletConnectModal').style.display = 'flex';
         }
 
     </script>

@@ -83,35 +83,27 @@
         }
         
         .connect-wallet-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 12px 18px;
-            border-radius: 16px;
-            border: none;
-            font-size: 16px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-            cursor: pointer;
-            transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            transition: transform 0.2s;
         }
         
         .connect-wallet-btn:active {
             transform: scale(0.95);
         }
         
-        .connect-wallet-btn:hover {
-            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
-        }
-        
         .connect-wallet-btn i {
-            font-size: 16px;
+            font-size: 12px;
         }
 
         /* --- Banner --- */
@@ -245,6 +237,57 @@
             background: #eee;
         }
 
+        /* --- 弹窗样式 --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: white;
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            right: 0; top: 0;
+            color: #999;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .option-item:last-child { border-bottom: none; }
+        .option-item img { width: 24px; margin-right: 15px; }
+        .option-item i { width: 24px; margin-right: 15px; text-align: center; font-size: 18px; color: #333; }
+        .option-item:active { background: #f9f9f9; }
+
         /* --- DApp List --- */
         .dapp-list { padding: 0 20px; }
 
@@ -319,6 +362,88 @@
         .nav-item.active { color: var(--text-dark); }
         .nav-item.active i { color: var(--primary-red); }
 
+        /* --- 搜索结果 --- */
+        .search-results {
+            display: none;
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            bottom: 80px;
+            background: white;
+            z-index: 98;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-results-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-gray);
+        }
+
+        .search-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .search-result-item {
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 16px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid #f5f5f5;
+            flex-shrink: 0;
+        }
+
+        .search-result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .search-result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            gap: 5px;
+        }
+
+        .search-result-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .search-result-desc {
+            font-size: 12px;
+            color: var(--text-gray);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
     </style>
 </head>
 <body>
@@ -330,11 +455,19 @@
         </button>
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" placeholder="搜索DApp">
+            <input type="text" id="searchInput" placeholder="搜索DApp" oninput="handleSearchInput()">
         </div>
         <div class="add-btn">
             <i class="fas fa-plus"></i>
         </div>
+    </div>
+
+    <!-- 搜索结果容器 -->
+    <div class="search-results" id="searchResults">
+        <div class="search-results-empty" id="searchEmpty">
+            <p>未找到匹配的DApp</p>
+        </div>
+        <div class="search-results-list" id="searchResultsList"></div>
     </div>
 
     <div class="banner-container">
@@ -604,7 +737,40 @@
         </div>
     </div>
 
-    <nav class="bottom-nav">
+    <!-- 连接钱包提供商弹窗 -->
+    <div class="modal-overlay" id="walletConnectModal" onclick="closeModal(event, 'walletConnectModal')">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-title">选择钱包 <span class="close-modal" onclick="closeThisModal('walletConnectModal')">&times;</span></div>
+            
+            <!-- 调用 WalletManager.connectMetamask() -->
+            <div class="option-item" onclick="WalletManager.connectMetamask()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="Metamask">
+                <span>MetaMask</span>
+            </div>
+            
+            <!-- 调用 WalletManager.connectBitget() -->
+            <div class="option-item" onclick="WalletManager.connectBitget()">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAMAAACfWMssAAAAgVBMVEUA8P////8AAAAA7/8A8/8A9/8AiYwAiI8A9f8AX2R19P8A6vb3/v8A6/kALzMAydTs/f8A5PIAT1QAKSlH8v+x+f+F9v/j/f8AHiEAFxgASk6Y9//O+/+5+f9Z8/+m+P8AO0AAIyIAIRwA1uEApKsAQkYANjcAVlsAm6EAsrvZ/P83Q69tAAACWUlEQVRIiZWWC3ObMAyAxeyu1EBKG4es5dXuQbb8/x84Y2MZGYukuutdyvnLp8jCFmSJKLtRabCh1diVqTWwfXQahIAQ5p+hvw3WilAIN7GWgmWToBa22QFPLDaT0HHgsMfNqEqC9T5lSV1vwTPRyQcMitYxSLn85RFDUmtNwTri3r75eIlAURIQKPfDY8ci4kwvrcGB8R22nK8tbPZv3zeTnQdLyqHvI8mZ8GCzeiaDbwKGE60D1zshK+Q+KoZzlQUiXPneJctZpQGDUBaB4/L0vxJWJZXFp+ded3xgCwthD2V1vCdPGyoD3AtZ/fTc5RZncoXOg8G35JmnXxCX6xnGBZS/Ql/n9sHv7z62hRI9KPyJr9hpbgeraadUDWj8LN9pb8viD18stfosg/PTkRDIOFsNhAzOyjkn3knJ2CmQnPjWpaR3Hu5o+nnhwwVr65wVkhP3ei5oIBfnkSbhYoAhJoPT78qBfpUNRTbERY7k25JtcOKiFhIXTY699tc1bYHd+C93S0zLXRM3DXZ3HiWPx7OoIdty8dc8Ife8CEGsX2SOC75nfMEaA/b7t+Lah5y4zofV133usCLn8V0+ECcLlnyueZKzd8D813Ikk+csdLfVl/JcbkgLdkkl45tLiherSrUP47N3FV7lessxPhjIDLCprOQ4HY0r0XgkHy9PLi6U80NHGJAiMpz/5LzQOESGkazUN0Y5oxtwNRkC+Zlz4dosDWYd7KBCXzMOzLIxNR9bDE50ZTxal2PKusGSw3ynYO0VZiA/b1clQBN13yp7pAyq7evkkv/22h/zGqVCbgAAAABJRU5ErkJggg==" alt="Bitget">
+                <span>Bitget Wallet</span>
+            </div>
+            
+            <!-- 调用 WalletManager.mockConnect() -->
+            <div class="option-item" onclick="WalletManager.mockConnect('OKX Wallet')">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJDSURBVHgB7Zq9jtpAEMfHlhEgQLiioXEkoAGECwoKxMcTRHmC5E3IoyRPkPAEkI7unJYmTgEFTYwA8a3NTKScLnCHN6c9r1e3P2llWQy7M/s1Gv1twCP0ej37dDq9x+Zut1t3t9vZjDEHIiSRSPg4ZpDL5fxkMvn1cDh8m0wmfugfO53OoFQq/crn8wxfY9EymQyrVCqMfHvScZx1p9ls3pFxXBy/bKlUipGPrVbLuQqAfsCliq3zl0H84zwtjQrOw4Mt1W63P5LvBm2d+Xz+YzqdgkqUy+WgWCy+Mc/nc282m4FqLBYL+3g8fjDxenq72WxANZbLJeA13zDX67UDioL5ybXwafMYu64Ltn3bdDoeQ5R97fd7GyhBQMipx4POeEDHIu2LfDdBIGGz+hJ9CQ1ABjoA2egAZPM6AgiCAEQhsi/C4jHyPA/6/f5NG3Ks2+3AYDC4aTccDrn6ojG54MnEvG00GoVmWLIRNZ7wTCwDHYBsdACy0QHIhiuRETxlICWpMMhGZHmqS8qH6JLyGegAZKMDkI0uKf8X4SWlaZo+Pp1bRrwlJU8ZKLIvUjKh0WiQ3sRUbNVq9c5Ebew7KEo2m/1p4jJ4qAmDaqDQBzj5XyiAT4VCQezJigAU+IDU+z8vJFnGWeC+bKQV/5VZ71FV6L7PA3gg3tXrdQ+DgLhC+75Wq3no69P3MC0NFQpx2lL04Ql9gHK1bRDjsSBIvScBnDTk1WrlGIZBorIDEYJj+rhdgnQ67VmWRe0zlplXl81vcyEt0rSoYDUAAAAASUVORK5CYII=" alt="TP">
+                <span>OKX Wallet</span>
+            </div>
+             <div class="option-item" onclick="WalletManager.mockConnect('TokenPocket')">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBtYXNrPSJ1cmwoI21hc2swXzQwOF8yMjUpIj4KPHBhdGggZD0iTTEwNDEuNTIgMEgtMjdWMTAyNEgxMDQxLjUyVjBaIiBmaWxsPSIjMjk4MEZFIi8+CjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF80MDhfMjI1KSI+CjxwYXRoIGQ9Ik00MDYuNzk2IDQzOC42NDNINDA2LjkyN0M0MDYuNzk2IDQzNy44NTcgNDA2Ljc5NiA0MzYuOTQgNDA2Ljc5NiA0MzYuMTU0VjQzOC42NDNaIiBmaWxsPSIjMjlBRUZGIi8+CjxwYXRoIGQ9Ik02NjcuNjAyIDQ2My41MzNINTIzLjI0OVY3MjQuMDc2QzUyMy4yNDkgNzM2LjM4OSA1MzMuMjA0IDc0Ni4zNDUgNTQ1LjUxNyA3NDYuMzQ1SDY0NS4zMzNDNjU3LjY0NyA3NDYuMzQ1IDY2Ny42MDIgNzM2LjM4OSA2NjcuNjAyIDcyNC4wNzZWNDYzLjUzM1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik00NTMuNTYzIDI3N0g0NDguNzE2SDE5MC4yNjlDMTc3Ljk1NSAyNzcgMTY4IDI4Ni45NTUgMTY4IDI5OS4yNjlWMzg5LjY1M0MxNjggNDAxLjk2NyAxNzcuOTU1IDQxMS45MjIgMTkwLjI2OSA0MTEuOTIySDI1MC45MThIMjc1LjAyMVY0MzguNjQ0VjcyNC43MzFDMjc1LjAyMSA3MzcuMDQ1IDI4NC45NzYgNzQ3IDI5Ny4yODkgNzQ3SDM5Mi4xMjhDNDA0LjQ0MSA3NDcgNDE0LjM5NiA3MzcuMDQ1IDQxNC4zOTYgNzI0LjczMVY0MzguNjQ0VjQzNi4xNTZWNDExLjkyMkg0MzguNDk5SDQ0OC4zMjNINDUzLjE3QzQ5MC4zNzIgNDExLjkyMiA1MjAuNjMxIDM4MS42NjMgNTIwLjYzMSAzNDQuNDYxQzUyMS4wMjQgMzA3LjI1OSA0OTAuNzY1IDI3NyA0NTMuNTYzIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02NjcuNzM1IDQ2My41MzNWNjQ1LjM1QzY3Mi43MTMgNjQ2LjUyOSA2NzcuODIxIDY0Ny40NDYgNjgzLjA2MSA2NDguMjMyQzY5MC4zOTcgNjQ5LjI4IDY5Ny45OTQgNjQ5LjkzNSA3MDUuNTkyIDY1MC4wNjZDNzA1Ljk4NSA2NTAuMDY2IDcwNi4zNzggNjUwLjA2NiA3MDYuOTAyIDY1MC4wNjZWNTA1LjQ1QzY4NS4wMjYgNTA0LjAwOSA2NjcuNzM1IDQ4NS44MDEgNjY3LjczNSA0NjMuNTMzWiIgZmlsbD0idXJsKCNwYWludDBfbGluZWFyXzQwOF8yMjUpIi8+CjxwYXRoIGQ9Ik03MDkuNzgxIDI3N0M2MDYuODIyIDI3NyA1MjMuMjQ5IDM2MC41NzMgNTIzLjI0OSA0NjMuNTMzQzUyMy4yNDkgNTUyLjA4NCA1ODQuOTQ2IDYyNi4yMjUgNjY3LjczMyA2NDUuMzVWNDYzLjUzM0M2NjcuNzMzIDQ0MC4zNDcgNjg2LjU5NiA0MjEuNDg0IDcwOS43ODEgNDIxLjQ4NEM3MzIuOTY3IDQyMS40ODQgNzUxLjgzIDQ0MC4zNDcgNzUxLjgzIDQ2My41MzNDNzUxLjgzIDQ4My4wNTEgNzM4LjYgNDk5LjQyNSA3MjAuNTIzIDUwNC4xNEM3MTcuMTE3IDUwNS4wNTcgNzEzLjQ0OSA1MDUuNTgxIDcwOS43ODEgNTA1LjU4MVY2NTAuMDY2QzcxMy40NDkgNjUwLjA2NiA3MTYuOTg2IDY0OS45MzUgNzIwLjUyMyA2NDkuODA0QzgxOC41MDUgNjQ0LjE3MSA4OTYuMzE0IDU2Mi45NTYgODk2LjMxNCA0NjMuNTMzQzg5Ni40NDUgMzYwLjU7MyA4MTIuODcyIDI3NyA3MDkuNzgxIDI3N1oiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik03MDkuNzggNjUwLjA2NlY1MDUuNTgxQzcwOC43MzMgNTA1LjU4MSA3MDcuODE2IDUwNS41ODEgNzA2Ljc2OCA1MDUuNDVWNjUwLjA2NkM3MDcuODE2IDY1MC4wNjYgNzA4Ljg2NCA2NTAuMDY2IDcwOS43OCA2NTAuMDY2WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8L2c+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNDA4XzIyNSIgeDE9IjcwOS44NDQiIHkxPSI1NTYuODI3IiB4Mj0iNjY3Ljc1MyIgeTI9IjU1Ni44MjciIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0id2hpdGUiLz4KPHN0b3Agb2Zmc2V0PSIwLjk2NjciIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMzIzMyIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IndoaXRlIiBzdG9wLW9wYWNpdHk9IjAuMyIvPgo8L2xpbmVhckdyYWRpZW50Pgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzQwOF8yMjUiPgo8cmVjdCB3aWR0aD0iNzI4LjQ0OCIgaGVpZ2h0PSI0NzAiIGZpbGw9IndoaXRlIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNjggMjc3KSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM+Cjwvc3ZnPgo=" alt="WC">
+                <span>TokenPocket</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 引入钱包管理脚本 -->
+    <script src="wallet.js"></script>
+
+       <nav class="bottom-nav">
         <a href="Home.html" class="nav-item">
             <i class="fas fa-wallet"></i>
             <span>钱包</span>
@@ -632,6 +798,174 @@
     </nav>
 
     <script>
+        // DApp 数据结构
+        const dappData = {
+            trends: [
+                {
+                    name: 'Handshake',
+                    desc: 'Handshake is a trusted decentralized custody protocol.',
+                    icon: 'https://ui-avatars.com/api/?name=Handshake&background=333&color=fff&size=128&bold=true',
+                    url: 'https://multisign-client.tokenup.org/'
+                },
+                {
+                    name: 'Xone Bvi',
+                    desc: 'Xone official dynamics and release information.',
+                    icon: 'https://ui-avatars.com/api/?name=Xone&background=D9836D&color=fff&size=128&bold=true',
+                    url: 'https://bvi.xone.org/en/dynamics/release'
+                },
+                {
+                    name: 'SwapX',
+                    desc: 'First one-stop swap protocol backed by Xone Foundation.',
+                    icon: 'https://ui-avatars.com/api/?name=SwapX&background=ff2d2d&color=fff&size=128&bold=true',
+                    url: 'https://swapx.exchange/zh'
+                },
+                {
+                    name: 'Uniswap',
+                    desc: 'Decentralized exchange based on automated market maker.',
+                    icon: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+                    url: 'https://app.uniswap.org/'
+                },
+                {
+                    name: 'PancakeSwap',
+                    desc: 'Trade, earn and win cryptocurrencies on the most popular decentralized platform.',
+                    icon: 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png',
+                    url: 'https://pancakeswap.finance/swap'
+                },
+                {
+                    name: 'Settlement',
+                    desc: 'Crypto payment solutions added to your application.',
+                    icon: 'https://ui-avatars.com/api/?name=Pay&background=27ae60&color=fff&size=128&bold=true',
+                    url: 'https://www.payout.plus'
+                }
+            ],
+            explore: [
+                {
+                    name: 'Handshake',
+                    desc: 'Handshake is a trusted decentralized custody protocol.',
+                    icon: 'https://ui-avatars.com/api/?name=Handshake&background=333&color=fff&size=128&bold=true',
+                    url: 'https://multisign-client.tokenup.org/'
+                },
+                {
+                    name: 'SwapX',
+                    desc: 'First one-stop swap protocol backed by Xone Foundation.',
+                    icon: 'https://ui-avatars.com/api/?name=SwapX&background=ff2d2d&color=fff&size=128&bold=true',
+                    url: 'https://swapx.exchange/zh'
+                },
+                {
+                    name: 'Xone Bvi',
+                    desc: 'Xone official dynamics and release information.',
+                    icon: 'https://ui-avatars.com/api/?name=Xone&background=D9836D&color=fff&size=128&bold=true',
+                    url: 'https://bvi.xone.org/en/dynamics/release'
+                },
+                {
+                    name: 'Uniswap',
+                    desc: 'Decentralized exchange based on automated market maker.',
+                    icon: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+                    url: 'https://app.uniswap.org/'
+                },
+                {
+                    name: 'PancakeSwap',
+                    desc: 'Trade, earn and win cryptocurrencies on the most popular decentralized platform.',
+                    icon: 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png',
+                    url: 'https://pancakeswap.finance/swap'
+                },
+                {
+                    name: 'Settlement',
+                    desc: 'Crypto payment solutions added to your application.',
+                    icon: 'https://ui-avatars.com/api/?name=Pay&background=27ae60&color=fff&size=128&bold=true',
+                    url: 'https://www.payout.plus'
+                },
+                {
+                    name: 'iZiSwap',
+                    desc: 'The next generation DEX on the BNB chain with DL-AMM.',
+                    icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/12306.png',
+                    url: 'https://izumi.finance/trade/swap'
+                },
+                {
+                    name: 'SyncSwap',
+                    desc: 'AMM DEX built on zkSync Era.',
+                    icon: 'https://s2.coinmarketcap.com/static/img/exchanges/64x64/6641.png',
+                    url: 'https://syncswap.xyz'
+                },
+                {
+                    name: 'SunSwap',
+                    desc: 'JustSwap is the first decentralized token exchange protocol on TRON.',
+                    icon: 'https://cryptologos.cc/logos/tron-trx-logo.png',
+                    url: 'https://sunswap.com/#/home?utm_source='
+                }
+            ]
+        };
+
+        // 搜索处理函数
+        function handleSearchInput() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+            const searchResultsList = document.getElementById('searchResultsList');
+            const searchEmpty = document.getElementById('searchEmpty');
+            const keyword = searchInput.value.trim().toLowerCase();
+
+            if (!keyword) {
+                // 清空搜索时隐藏结果面板
+                searchResults.classList.remove('active');
+                return;
+            }
+
+            // 合并趋势和探索的所有DApp数据
+            const allDapps = [...dappData.trends, ...dappData.explore];
+            
+            // 去重处理
+            const uniqueDapps = Array.from(
+                new Map(allDapps.map(item => [item.name, item])).values()
+            );
+
+            // 搜索匹配
+            const results = uniqueDapps.filter(dapp => 
+                dapp.name.toLowerCase().includes(keyword) || 
+                dapp.desc.toLowerCase().includes(keyword)
+            );
+
+            // 清空之前的搜索结果
+            searchResultsList.innerHTML = '';
+
+            if (results.length === 0) {
+                searchEmpty.style.display = 'block';
+                searchResultsList.style.display = 'none';
+            } else {
+                searchEmpty.style.display = 'none';
+                searchResultsList.style.display = 'flex';
+                
+                // 渲染搜索结果
+                results.forEach(dapp => {
+                    const resultItem = document.createElement('a');
+                    resultItem.href = dapp.url;
+                    resultItem.className = 'search-result-item';
+                    resultItem.target = '_blank';
+                    resultItem.innerHTML = `
+                        <img src="${dapp.icon}" class="search-result-icon" onerror="this.src='https://ui-avatars.com/api/?name=${dapp.name}&background=999&color=fff'">
+                        <div class="search-result-info">
+                            <div class="search-result-header">
+                                <span class="search-result-name">${dapp.name}</span>
+                            </div>
+                            <div class="search-result-desc">${dapp.desc}</div>
+                        </div>
+                    `;
+                    searchResultsList.appendChild(resultItem);
+                });
+            }
+
+            // 显示搜索结果面板
+            searchResults.classList.add('active');
+        }
+
+        // 清除搜索时隐藏结果
+        document.getElementById('searchInput').addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!this.value.trim()) {
+                    document.getElementById('searchResults').classList.remove('active');
+                }
+            }, 100);
+        });
+
         // 简单的交互模拟
         function openDapp(name) {
             console.log("Opening " + name);
@@ -645,6 +979,10 @@
         
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
+                // 清空搜索
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchResults').classList.remove('active');
+
                 // 移除所有tab的active类
                 tabs.forEach(t => t.classList.remove('active'));
                 tabContents.forEach(content => content.classList.remove('active'));
@@ -668,8 +1006,21 @@
             });
         });
         
+        // 弹窗控制函数
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(e, id) {
+            if (e.target.id === id) {
+                document.getElementById(id).style.display = 'none';
+            }
+        }
+        function closeThisModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
         function connectWallet() {
-            alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
+            openModal('walletConnectModal');
         }
     </script>
 </body>
