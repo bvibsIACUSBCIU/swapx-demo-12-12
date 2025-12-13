@@ -54,6 +54,39 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 钱包按钮 - 左上角放置，与兑换按钮风格一致 */
+        .connect-wallet-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .connect-wallet-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .connect-wallet-btn:hover {
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .connect-wallet-btn i {
+            font-size: 16px;
+        }
+
         /* --- 列表页 UI --- */
         .header {
             padding: 50px 20px 10px; /* 适配全面屏顶部 */
@@ -431,6 +464,10 @@
 
     <div id="listView" class="page-view active">
         <div class="header">
+            <button class="connect-wallet-btn" onclick="connectWallet()">
+                <i class="fas fa-wallet"></i>
+                <span>连接钱包</span>
+            </button>
             <div class="page-title">
                 股票代币 
                 <i class="fas fa-chart-line" style="color: #FF9500; font-size: 24px;"></i>

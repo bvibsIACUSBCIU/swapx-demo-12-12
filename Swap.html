@@ -41,6 +41,40 @@
         }
         .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .logo i { color: #FF3B30; }
+        
+        /* 钱包按钮 - 左上角放置，与兑换按钮风格一致 */
+        .connect-wallet-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .connect-wallet-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .connect-wallet-btn:hover {
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+        
+        .connect-wallet-btn i {
+            font-size: 16px;
+        }
+        
         .wallet-pill {
             background: white;
             padding: 6px 12px;
@@ -426,6 +460,10 @@
 <body>
 
     <div class="header">
+        <button class="connect-wallet-btn" onclick="connectWallet()">
+            <i class="fas fa-wallet"></i>
+            <span>连接钱包</span>
+        </button>
         <div class="logo">
             <i class="fas fa-layer-group"></i> SwapX
         </div>
