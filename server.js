@@ -8,6 +8,16 @@ const PORT = 3000;
 // 启用 CORS
 app.use(cors());
 
+// 设置 MIME 类型
+app.use((req, res, next) => {
+    if (req.path.endsWith('.js')) {
+        res.type('application/javascript');
+    } else if (req.path.endsWith('.json')) {
+        res.type('application/json');
+    }
+    next();
+});
+
 // 提供静态文件
 app.use(express.static(path.join(__dirname)));
 

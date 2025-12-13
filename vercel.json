@@ -4,43 +4,22 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/Home.html"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "src": "/(.*)",
+      "dest": "api/index.js"
     }
   ],
   "headers": [
     {
-      "source": "/(.*)\\.html",
+      "source": "/(.*)\\.js",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
         },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        }
-      ]
-    },
-    {
-      "source": "/wallet.js",
-      "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=3600, must-revalidate"
@@ -48,15 +27,28 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/(.*)\\.html",
       "headers": [
         {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
+          "key": "Content-Type",
+          "value": "text/html; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         },
         {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }

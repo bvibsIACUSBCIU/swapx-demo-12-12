@@ -182,6 +182,13 @@ const WalletManager = {
                 return;
             }
 
+            // 检查 provider 是否具有 request 方法
+            if (typeof provider.request !== 'function') {
+                console.error('MetaMask provider 不具有 request 方法:', provider);
+                alert('钱包提供商不支持该操作。请确保 MetaMask 已正确安装。');
+                return;
+            }
+
             // 使用 Promise.race 设置超时，处理 Vercel 环境下的提示框延迟
             const connectPromise = provider.request({ method: 'eth_requestAccounts' });
             const timeoutPromise = new Promise((_, reject) => {
@@ -208,6 +215,8 @@ const WalletManager = {
                 alert('您已取消连接请求');
             } else if (error.message?.includes('超时')) {
                 alert('连接超时，请检查网络连接后重试');
+            } else if (error.message?.includes('not a function')) {
+                alert('钱包提供商接口不兼容。请更新 MetaMask 到最新版本。');
             } else if (error.message?.includes('provider')) {
                 alert('钱包提供商初始化失败，请刷新页面重试');
             } else {
@@ -281,6 +290,13 @@ const WalletManager = {
                 return;
             }
 
+            // 检查 provider 是否具有 request 方法
+            if (typeof provider.request !== 'function') {
+                console.error('Provider 不具有 request 方法:', provider);
+                alert('钱包提供商不支持该操作。请确保钱包已正确安装。');
+                return;
+            }
+
             this.state.provider = provider;
 
             // 3. 请求连接 (增加超时处理)
@@ -311,6 +327,8 @@ const WalletManager = {
                 alert('用户取消了连接请求');
             } else if (error.message?.includes('超时')) {
                 alert('连接超时，请检查钱包应用是否正常运行');
+            } else if (error.message?.includes('not a function')) {
+                alert('钱包提供商接口不兼容。请更新 Bitget Wallet 到最新版本。');
             } else {
                 alert('连接出错: ' + (error.message || '未知错误'));
             }
@@ -332,6 +350,13 @@ const WalletManager = {
      */
     fetchBalance: async function(account) {
         if (!this.state.provider) return;
+        
+        // 检查 provider 是否具有 request 方法
+        if (typeof this.state.provider.request !== 'function') {
+            console.warn('Provider 不支持 request 方法，跳过余额获取');
+            return;
+        }
+        
         try {
             const balanceHex = await this.state.provider.request({
                 method: 'eth_getBalance',
