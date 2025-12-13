@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "http-server -p 3000 -c-1"
+    "dev": "http-server -p 3000 -c-1",
+    "build": "echo 'Static site - no build required'"
   },
   "keywords": [
     "crypto",
