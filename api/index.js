@@ -27,8 +27,8 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'Home.html'));
 });
 
-// 为所有 HTML 路由提供正确的 MIME 类型
-app.get('*.html', (req, res) => {
+// 为所有 HTML 路由提供正确的 MIME 类型 (修复正则表达式)
+app.get(/\.html$/, (req, res) => {
     res.type('text/html');
     res.sendFile(path.join(__dirname, '..', req.path));
 });

@@ -44,9 +44,10 @@
         /* --- 初始合约列表页面 --- */
         .list-view { display: none; flex-direction: column; height: calc(100vh - var(--nav-height)); overflow: hidden; z-index: 50; }
         .list-view.active { display: flex; z-index: 50; }
-        .list-header-banner { background: linear-gradient(135deg, #FCD535 0%, #FFE080 100%); padding: 30px 20px; text-align: center; color: #12161c; }
-        .list-header-banner-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .list-header-banner-subtitle { font-size: 13px; opacity: 0.8; }
+        .list-header-banner { background: #ffffff; padding: 30px 20px; text-align: center; color: #12161c; border-bottom: 1px solid var(--border-color); }
+        .list-header-banner-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .list-header-banner-title-icon { font-size: 32px; color: var(--color-brand); }
+        .list-header-banner-subtitle { font-size: 13px; opacity: 0.8; color: var(--text-secondary); }
         .list-search-box { padding: 15px; background: var(--bg-main); }
         .search-input-wrapper { position: relative; }
         .search-input { width: 100%; padding: 12px 40px 12px 16px; background: var(--bg-input); border: none; border-radius: 8px; color: var(--text-primary); font-size: 14px; outline: none; }
@@ -276,7 +277,11 @@
     <!-- 初始列表视图 -->
     <div id="list-view" class="list-view active">
         <div class="list-header-banner">
-            <div class="list-header-banner-title">交易合约</div>
+            <div class="list-header-banner-title">
+                <i class="fas fa-chart-bar list-header-banner-title-icon"></i>
+                交易合约
+                <span style="font-size: 24px; color: var(--color-brand); font-weight: 700;">100x</span>
+            </div>
             <div class="list-header-banner-subtitle">最高百倍杠杆</div>
         </div>
         
@@ -1163,6 +1168,46 @@
             alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
         }
 
+        // 安全的钱包连接包装函数（防止 Vercel 部署环境下脚本加载延迟）
+        function safeConnectMetamask() {
+            if (typeof WalletManager !== 'undefined' && WalletManager.connectMetamask) {
+                WalletManager.connectMetamask();
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+                setTimeout(() => {
+                    if (typeof WalletManager !== 'undefined' && WalletManager.connectMetamask) {
+                        WalletManager.connectMetamask();
+                    } else {
+                        alert('钱包管理器加载失败，请刷新页面');
+                    }
+                }, 500);
+            }
+        }
+
+        function safeConnectBitget() {
+            if (typeof WalletManager !== 'undefined' && WalletManager.connectBitget) {
+                WalletManager.connectBitget();
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+                setTimeout(() => {
+                    if (typeof WalletManager !== 'undefined' && WalletManager.connectBitget) {
+                        WalletManager.connectBitget();
+                    } else {
+                        alert('钱包管理器加载失败，请刷新页面');
+                    }
+                }, 500);
+            }
+        }
+
+        function safeMockConnect(name) {
+            if (typeof WalletManager !== 'undefined' && WalletManager.mockConnect) {
+                WalletManager.mockConnect(name);
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+            }
+        }
+
     </script>
+    <script src="wallet.js"></script>
 </body>
 </html>

@@ -1362,6 +1362,46 @@
             alert("连接钱包...\n支持: MetaMask, WalletConnect, Coinbase Wallet");
         }
 
+        // 安全的钱包连接包装函数（防止 Vercel 部署环境下脚本加载延迟）
+        function safeConnectMetamask() {
+            if (typeof WalletManager !== 'undefined' && WalletManager.connectMetamask) {
+                WalletManager.connectMetamask();
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+                setTimeout(() => {
+                    if (typeof WalletManager !== 'undefined' && WalletManager.connectMetamask) {
+                        WalletManager.connectMetamask();
+                    } else {
+                        alert('钱包管理器加载失败，请刷新页面');
+                    }
+                }, 500);
+            }
+        }
+
+        function safeConnectBitget() {
+            if (typeof WalletManager !== 'undefined' && WalletManager.connectBitget) {
+                WalletManager.connectBitget();
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+                setTimeout(() => {
+                    if (typeof WalletManager !== 'undefined' && WalletManager.connectBitget) {
+                        WalletManager.connectBitget();
+                    } else {
+                        alert('钱包管理器加载失败，请刷新页面');
+                    }
+                }, 500);
+            }
+        }
+
+        function safeMockConnect(name) {
+            if (typeof WalletManager !== 'undefined' && WalletManager.mockConnect) {
+                WalletManager.mockConnect(name);
+            } else {
+                alert('钱包管理器正在加载，请稍候...');
+            }
+        }
+
     </script>
+    <script src="wallet.js"></script>
 </body>
 </html>
