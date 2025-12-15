@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -24,18 +25,33 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // 主页路由
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'Home.html'));
+    const homePath = path.join(__dirname, '..', 'Home.html');
+    if (fs.existsSync(homePath)) {
+        res.sendFile(homePath);
+    } else {
+        res.status(404).send('Home.html not found');
+    }
 });
 
-// 为所有 HTML 路由提供正确的 MIME 类型 (修复正则表达式)
+// 为所有 HTML 路由提供正确的 MIME 类型
 app.get(/\.html$/, (req, res) => {
-    res.type('text/html');
-    res.sendFile(path.join(__dirname, '..', req.path));
+    const filePath = path.join(__dirname, '..', req.path);
+    if (fs.existsSync(filePath)) {
+        res.type('text/html');
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send('File not found: ' + req.path);
+    }
 });
 
 // 处理 SPA 路由 - 未匹配的路由返回 Home.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'Home.html'));
+    const homePath = path.join(__dirname, '..', 'Home.html');
+    if (fs.existsSync(homePath)) {
+        res.sendFile(homePath);
+    } else {
+        res.status(404).send('Home.html not found');
+    }
 });
 
 module.exports = app;
