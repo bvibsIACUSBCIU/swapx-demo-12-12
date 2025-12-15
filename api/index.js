@@ -20,37 +20,46 @@ app.use((req, res, next) => {
     next();
 });
 
-// 提供静态文件
-app.use(express.static(path.join(__dirname, '..')));
+// 提供静态文件 - 处理 Vercel 的特殊路径
+const staticDir = path.join(__dirname, '..');
+app.use(express.static(staticDir));
 
 // 主页路由
 app.get('/', (req, res) => {
-    const homePath = path.join(__dirname, '..', 'Home.html');
-    if (fs.existsSync(homePath)) {
-        res.sendFile(homePath);
+    const filePath = path.join(staticDir, 'Home.html');
+    console.log('GET / - Looking for:', filePath);
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
     } else {
-        res.status(404).send('Home.html not found');
+        res.status(404).send('Home.html not found at ' + filePath);
     }
 });
 
 // 为所有 HTML 路由提供正确的 MIME 类型
 app.get(/\.html$/, (req, res) => {
-    const filePath = path.join(__dirname, '..', req.path);
+    let filePath = path.join(staticDir, req.path);
+    // 处理可能的重复路径
+    if (filePath.includes('/api/../')) {
+        filePath = filePath.replace('/api/../', '/');
+    }
+    console.log('GET *.html -', req.path, '-> Looking for:', filePath);
     if (fs.existsSync(filePath)) {
         res.type('text/html');
         res.sendFile(filePath);
     } else {
-        res.status(404).send('File not found: ' + req.path);
+        res.status(404).send('File not found: ' + req.path + ' (looked at: ' + filePath + ')');
     }
 });
 
 // 处理 SPA 路由 - 未匹配的路由返回 Home.html
 app.get('*', (req, res) => {
-    const homePath = path.join(__dirname, '..', 'Home.html');
-    if (fs.existsSync(homePath)) {
-        res.sendFile(homePath);
+    const filePath = path.join(staticDir, 'Home.html');
+    console.log('GET * (fallback) -', req.path, '-> returning Home.html at:', filePath);
+    if (fs.existsSync(filePath)) {
+        res.type('text/html');
+        res.sendFile(filePath);
     } else {
-        res.status(404).send('Home.html not found');
+        res.status(404).send('Home.html not found at ' + filePath);
     }
 });
 

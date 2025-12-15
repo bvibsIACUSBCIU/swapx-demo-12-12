@@ -15,21 +15,6 @@
       "dest": "/$1"
     },
     {
-      "src": "/(.*\\.html)",
-      "headers": {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, must-revalidate"
-      },
-      "dest": "/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "headers": {
-        "Cache-Control": "no-cache, no-store, must-revalidate"
-      },
-      "dest": "api/index.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "api/index.js"
     }
